@@ -31,6 +31,8 @@ class EmployeeController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:employees,email'],
             'department_id' => ['nullable','exists:departments,id'],
+            'salary' => ['required','numeric','min:0'],
+            'bonus' => ['nullable','numeric','min:0'],
             'position' => ['nullable', 'string', 'max:255'],
             'hire_date' => ['nullable', 'date'],
             'cv' => ['required', 'file', 'mimes:pdf,doc,docx'],
@@ -42,6 +44,8 @@ class EmployeeController extends Controller
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'department_id' => $validated['department_id'] ?? null,
+            'salary' => $validated['salary'],
+            'bonus' => $validated['bonus'] ?? null,
             'position' => $validated['position'] ?? null,
             'hire_date' => $validated['hire_date'] ?? null,
             'status' => 'active',
@@ -88,9 +92,13 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'department_id' => ['nullable','exists:departments,id'],
+            'salary' => ['nullable','numeric','min:0'],
+            'bonus' => ['nullable','numeric','min:0'],
         ]);
         $employee->update([
-            'department_id' => $validated['department_id'] ?? null,
+            'department_id' => $validated['department_id'] ?? $employee->department_id,
+            'salary' => $validated['salary'] ?? $employee->salary,
+            'bonus' => $validated['bonus'] ?? $employee->bonus,
         ]);
         return redirect()->route('hrm.employees.index')->with('status', 'Employee updated');
     }

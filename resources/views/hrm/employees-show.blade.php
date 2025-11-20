@@ -57,6 +57,16 @@
                     </div>
 
                     <div class="col-md-6">
+                        <strong><i class="bi bi-cash-stack"></i> Salary:</strong>
+                        <div>{{ $employee->salary !== null ? number_format($employee->salary,2) : '-' }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong><i class="bi bi-gift"></i> Bonus:</strong>
+                        <div>{{ $employee->bonus !== null ? number_format($employee->bonus,2) : '-' }}</div>
+                    </div>
+
+                    <div class="col-md-6">
                         <strong><i class="bi bi-calendar-event-fill"></i> Hire Date:</strong>
                         <div>{{ $employee->hire_date }}</div>
                     </div>

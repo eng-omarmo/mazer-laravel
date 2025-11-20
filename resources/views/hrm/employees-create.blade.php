@@ -49,6 +49,16 @@
                             <input type="email" name="email" value="{{ old('email') }}" class="form-control">
                             @error('email')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Salary</label>
+                            <input type="number" step="0.01" name="salary" value="{{ old('salary') }}" class="form-control">
+                            @error('salary')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Bonus</label>
+                            <input type="number" step="0.01" name="bonus" value="{{ old('bonus') }}" class="form-control">
+                            @error('bonus')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Position</label>
                             <input type="text" name="position" value="{{ old('position') }}" class="form-control">

@@ -5,6 +5,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\PayrollController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -48,6 +49,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/leave/{leave}', [LeaveController::class, 'destroy'])->name('leave.destroy');
         Route::post('/leave/{leave}/approve', [LeaveController::class, 'approve'])->name('leave.approve');
         Route::post('/leave/{leave}/reject', [LeaveController::class, 'reject'])->name('leave.reject');
+
+        Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+        Route::get('/payroll/create', [PayrollController::class, 'create'])->name('payroll.create');
+        Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
+        Route::get('/payroll/{payroll}/edit', [PayrollController::class, 'edit'])->name('payroll.edit');
+        Route::patch('/payroll/{payroll}', [PayrollController::class, 'update'])->name('payroll.update');
+        Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
+        Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
+        Route::post('/payroll/{payroll}/paid', [PayrollController::class, 'markPaid'])->name('payroll.paid');
     });
 });
 

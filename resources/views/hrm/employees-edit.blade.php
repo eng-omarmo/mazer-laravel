@@ -35,6 +35,16 @@
                             </select>
                             @error('department_id')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Salary</label>
+                            <input type="number" step="0.01" name="salary" class="form-control" value="{{ old('salary', $employee->salary) }}">
+                            @error('salary')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Bonus</label>
+                            <input type="number" step="0.01" name="bonus" class="form-control" value="{{ old('bonus', $employee->bonus) }}">
+                            @error('bonus')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
                     </div>
                     <div class="mt-3">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
