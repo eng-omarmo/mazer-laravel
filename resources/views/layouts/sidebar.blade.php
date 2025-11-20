@@ -21,12 +21,30 @@
             <li class="sidebar-title">HRM</li>
             <li class="sidebar-item has-sub">
                 <a href="#" class='sidebar-link'>
-                    <i class="bi bi-people-fill"></i>
+                    <i class="bi bi-people"></i>
                     <span>People</span>
                 </a>
                 <ul class="submenu">
-                    <li class="submenu-item"><a href="{{ url('hrm/employees') }}">Employees</a></li>
-                    <li class="submenu-item"><a href="{{ url('hrm/departments') }}">Departments</a></li>
+                    <li class="submenu-item">
+                        <a href="{{ route('hrm.employees.index') }}">
+                            <i class="bi bi-card-list me-2"></i> Employees
+                        </a>
+                    </li>
+                    <li class="submenu-item">
+                        <a href="{{ route('hrm.employees.create') }}">
+                            <i class="bi bi-person-plus me-2"></i> Add Employee
+                        </a>
+                    </li>
+                    <li class="submenu-item">
+                        <a href="{{ route('hrm.departments.index') }}">
+                            <i class="bi bi-diagram-3 me-2"></i> Department List
+                        </a>
+                    </li>
+                    <li class="submenu-item">
+                        <a href="{{ route('hrm.departments.create') }}">
+                            <i class="bi bi-plus-circle me-2"></i> Add Department
+                        </a>
+                    </li>
                 </ul>
             </li>
             <li class="sidebar-item has-sub">
