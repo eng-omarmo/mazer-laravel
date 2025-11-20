@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\HRM\DepartmentController;
-use App\Http\Controllers\HRM\EmployeeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -19,8 +17,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::prefix('hrm')->group(function () {
-        Route::resource('departments', DepartmentController::class)->names('hrm.departments');
-        Route::resource('employees', EmployeeController::class)->names('hrm.employees');
+        Route::view('/employees', 'hrm.employees');
+        Route::view('/departments', 'hrm.departments');
         Route::view('/attendance', 'hrm.attendance');
         Route::view('/leave', 'hrm.leave');
         Route::view('/payroll', 'hrm.payroll');
