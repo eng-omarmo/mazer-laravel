@@ -8,14 +8,20 @@ return new class extends Migration {
     public function up(): void
     {
         if (Schema::hasTable('employee_documents')) {
-            DB::statement("ALTER TABLE employee_documents MODIFY COLUMN type ENUM('cv','contract','identity') NOT NULL");
+            $driver = Schema::getConnection()->getDriverName();
+            if ($driver === 'mysql') {
+                DB::statement("ALTER TABLE employee_documents MODIFY COLUMN type ENUM('cv','contract','identity') NOT NULL");
+            }
         }
     }
 
     public function down(): void
     {
         if (Schema::hasTable('employee_documents')) {
-            DB::statement("ALTER TABLE employee_documents MODIFY COLUMN type ENUM('cv','contract') NOT NULL");
+            $driver = Schema::getConnection()->getDriverName();
+            if ($driver === 'mysql') {
+                DB::statement("ALTER TABLE employee_documents MODIFY COLUMN type ENUM('cv','contract') NOT NULL");
+            }
         }
     }
 };

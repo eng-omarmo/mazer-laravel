@@ -7,8 +7,8 @@
     <div class="page-title">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Profile Statistics</h3>
-                <p class="text-subtitle text-muted">Sample dashboard from Mazer template</p>
+                <h3>HRM Overview</h3>
+                <p class="text-subtitle text-muted">Comprehensive metrics across Employees, Departments, Leaves, Payroll, Attendance</p>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
@@ -22,165 +22,143 @@
     </div>
     <div class="page-content">
         <section class="row">
-            <div class="col-12 col-lg-9">
+            <div class="col-12 col-lg-12">
+                @php
+                    $empCount = \App\Models\Employee::count();
+                    $deptCount = \App\Models\Department::count();
+                    $today = now()->toDateString();
+                    $presentToday = \App\Models\AttendanceLog::where('date',$today)->where('status','present')->count();
+                    $absentToday = \App\Models\AttendanceLog::where('date',$today)->where('status','absent')->count();
+                    $lateToday = \App\Models\AttendanceLog::where('date',$today)->where('status','late')->count();
+                    $earlyToday = \App\Models\AttendanceLog::where('date',$today)->where('status','early_leave')->count();
+                    $pendingLeaves = \App\Models\EmployeeLeave::where('status','pending')->count();
+                    $approvedLeaves = \App\Models\EmployeeLeave::where('status','approved')->count();
+                    $curYear = now()->year; $curMonth = now()->month;
+                    $batch = \App\Models\PayrollBatch::where('year',$curYear)->where('month',$curMonth)->first();
+                    $batchTotal = $batch?->total_amount ?? 0;
+                    $batchStatus = $batch?->status ?? 'none';
+                @endphp
+
                 <div class="row">
-                    <div class="col-6 col-lg-3 col-md-6">
-                        <div class="card">
-                            <div class="card-body px-3 py-4-5">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="stats-icon purple">
-                                            <i class="iconly-boldShow"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Profile Views</h6>
-                                        <h6 class="font-extrabold mb-0">112.000</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon green"><i class="bi bi-people-fill"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Employees</h6><h6 class="font-extrabold mb-0">{{ $empCount }}</h6></div></div></div></div>
                     </div>
-                    <div class="col-6 col-lg-3 col-md-6">
-                        <div class="card">
-                            <div class="card-body px-3 py-4-5">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="stats-icon green">
-                                            <i class="iconly-boldProfile"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Followers</h6>
-                                        <h6 class="font-extrabold mb-0">183.000</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon blue"><i class="bi bi-diagram-3-fill"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Departments</h6><h6 class="font-extrabold mb-0">{{ $deptCount }}</h6></div></div></div></div>
                     </div>
-                    <div class="col-6 col-lg-3 col-md-6">
-                        <div class="card">
-                            <div class="card-body px-3 py-4-5">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="stats-icon blue">
-                                            <i class="iconly-boldAdd-User"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Following</h6>
-                                        <h6 class="font-extrabold mb-0">80.000</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon warning"><i class="bi bi-calendar-check"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Leaves Pending</h6><h6 class="font-extrabold mb-0">{{ $pendingLeaves }}</h6></div></div></div></div>
                     </div>
-                    <div class="col-6 col-lg-3 col-md-6">
-                        <div class="card">
-                            <div class="card-body px-3 py-4-5">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="stats-icon red">
-                                            <i class="iconly-boldBookmark"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Saved</h6>
-                                        <h6 class="font-extrabold mb-0">112</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon success"><i class="bi bi-check2-circle"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Leaves Approved</h6><h6 class="font-extrabold mb-0">{{ $approvedLeaves }}</h6></div></div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon info"><i class="bi bi-cash-stack"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Payroll {{ str_pad($curMonth,2,'0',STR_PAD_LEFT) }}/{{ $curYear }}</h6><h6 class="font-extrabold mb-0">{{ number_format($batchTotal,2) }}</h6></div></div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon secondary"><i class="bi bi-clipboard-check"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Batch Status</h6><h6 class="font-extrabold mb-0">{{ ucfirst($batchStatus) }}</h6></div></div></div></div>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Profile Visit</h4>
-                    </div>
-                    <div class="card-body">
-                        <div id="chart-profile-visit"></div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-lg-4">
+
+                <div class="row mt-3">
+                    <div class="col-12 col-lg-6">
+                        @php $todayLogs = \App\Models\AttendanceLog::with('employee.department')->where('date',$today)->orderBy('employee_id')->limit(10)->get(); @endphp
                         <div class="card">
+                            <div class="card-header"><h4>Attendance Today</h4></div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="text-muted font-semibold">Europe</h6>
-                                    <h6 class="font-extrabold mb-0">862</h6>
+                                <div class="d-flex gap-3 mb-3">
+                                    <span class="badge bg-success">Present {{ $presentToday }}</span>
+                                    <span class="badge bg-secondary">Absent {{ $absentToday }}</span>
+                                    <span class="badge bg-warning">Late {{ $lateToday }}</span>
+                                    <span class="badge bg-info">Early {{ $earlyToday }}</span>
                                 </div>
-                                <div id="chart-europe"></div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead><tr><th>Employee</th><th>Dept</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
+                                        <tbody>
+                                            @foreach($todayLogs as $l)
+                                                <tr>
+                                                    <td>{{ $l->employee->first_name }} {{ $l->employee->last_name }}</td>
+                                                    <td>{{ optional($l->employee->department)->name }}</td>
+                                                    <td>{{ $l->check_in ?? '-' }}</td>
+                                                    <td>{{ $l->check_out ?? '-' }}</td>
+                                                    <td><span class="badge bg-{{ $l->status === 'present' ? 'success' : ($l->status === 'absent' ? 'secondary' : ($l->status === 'late' ? 'warning' : 'info')) }}">{{ ucfirst(str_replace('_',' ', $l->status)) }}</span></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-lg-4">
+                    <div class="col-12 col-lg-6">
+                        @php $latestLeaves = \App\Models\EmployeeLeave::with('employee')->orderByDesc('created_at')->limit(10)->get(); @endphp
                         <div class="card">
+                            <div class="card-header"><h4>Recent Leaves</h4></div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="text-muted font-semibold">America</h6>
-                                    <h6 class="font-extrabold mb-0">375</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead><tr><th>Employee</th><th>Period</th><th>Status</th></tr></thead>
+                                        <tbody>
+                                            @foreach($latestLeaves as $lv)
+                                                <tr>
+                                                    <td>{{ $lv->employee->first_name }} {{ $lv->employee->last_name }}</td>
+                                                    <td>{{ $lv->start_date }} - {{ $lv->end_date }}</td>
+                                                    <td><span class="badge bg-{{ $lv->status === 'approved' ? 'success' : ($lv->status === 'rejected' ? 'danger' : 'warning') }}">{{ ucfirst($lv->status) }}</span></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div id="chart-america"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="text-muted font-semibold">Indonesia</h6>
-                                    <h6 class="font-extrabold mb-0">1025</h6>
-                                </div>
-                                <div id="chart-indonesia"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-lg-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <h6 class="text-muted font-semibold">Visitors</h6>
-                            <h6 class="font-extrabold mb-0">60,2%</h6>
+
+                <div class="row mt-3">
+                    <div class="col-12 col-lg-6">
+                        @php $latestEmps = \App\Models\Employee::with('department')->orderByDesc('created_at')->limit(10)->get(); @endphp
+                        <div class="card">
+                            <div class="card-header"><h4>New Employees</h4></div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead><tr><th>Name</th><th>Department</th><th>Hire Date</th></tr></thead>
+                                        <tbody>
+                                            @foreach($latestEmps as $e)
+                                                <tr>
+                                                    <td>{{ $e->first_name }} {{ $e->last_name }}</td>
+                                                    <td>{{ optional($e->department)->name }}</td>
+                                                    <td>{{ $e->hire_date }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                        <div id="chart-visitors-profile"></div>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Recent Messages</h4>
-                    </div>
-                    <div class="card-content pb-4">
-                        <div class="recent-message d-flex px-4 py-3 align-items-center">
-                            <div class="avatar avatar-lg">
-                                <img src="{{ asset('assets/images/faces/4.jpg') }}">
+                    <div class="col-12 col-lg-6">
+                        @php $latestBatches = \App\Models\PayrollBatch::orderByDesc('year')->orderByDesc('month')->limit(10)->get(); @endphp
+                        <div class="card">
+                            <div class="card-header"><h4>Payroll Batches</h4></div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead><tr><th>Month</th><th>Employees</th><th>Total</th><th>Status</th></tr></thead>
+                                        <tbody>
+                                            @foreach($latestBatches as $b)
+                                                <tr>
+                                                    <td>{{ $b->year }}-{{ str_pad($b->month,2,'0',STR_PAD_LEFT) }}</td>
+                                                    <td>{{ $b->total_employees }}</td>
+                                                    <td>{{ number_format($b->total_amount,2) }}</td>
+                                                    <td><span class="badge bg-{{ $b->status === 'approved' ? 'success' : ($b->status === 'submitted' ? 'primary' : ($b->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($b->status) }}</span></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="name ms-3">
-                                <h5 class="mb-1">Artemis Kahle</h5>
-                                <h6 class="text-muted mb-0">Hello, are you there?</h6>
-                            </div>
-                        </div>
-                        <div class="recent-message d-flex px-4 py-3 align-items-center">
-                            <div class="avatar avatar-lg">
-                                <img src="{{ asset('assets/images/faces/5.jpg') }}">
-                            </div>
-                            <div class="name ms-3">
-                                <h5 class="mb-1">Abel H</h5>
-                                <h6 class="text-muted mb-0">You can go ASAP?</h6>
-                            </div>
-                        </div>
-                        <div class="recent-message d-flex px-4 py-3 align-items-center">
-                            <div class="avatar avatar-lg">
-                                <img src="{{ asset('assets/images/faces/1.jpg') }}">
-                            </div>
-                            <div class="name ms-3">
-                                <h5 class="mb-1">Iren A</h5>
-                                <h6 class="text-muted mb-0">I want it now.</h6>
-                            </div>
-                        </div>
-                        <div class="px-4">
-                            <a href="#" class='btn btn-block btn-xl btn-outline-primary font-bold mt-3'>Start Conversation</a>
                         </div>
                     </div>
                 </div>
@@ -191,6 +169,5 @@
 @endsection
 
 @section('js')
-<script src="{{ asset('assets/vendors/apexcharts/apexcharts.min.js') }}"></script>
-<script src="{{ asset('assets/js/pages/dashboard.js') }}"></script>
+<script></script>
 @endsection
