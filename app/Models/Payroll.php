@@ -10,6 +10,7 @@ class Payroll extends Model
     use HasFactory;
 
     protected $fillable = [
+        'batch_id',
         'employee_id',
         'year',
         'month',
@@ -27,5 +28,10 @@ class Payroll extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(PayrollBatch::class, 'batch_id');
     }
 }

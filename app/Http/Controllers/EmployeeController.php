@@ -33,10 +33,14 @@ class EmployeeController extends Controller
             'department_id' => ['nullable','exists:departments,id'],
             'salary' => ['required','numeric','min:0'],
             'bonus' => ['nullable','numeric','min:0'],
+            'reference_full_name' => ['nullable','string','max:255'],
+            'reference_phone' => ['nullable','string','max:30'],
+            'identity_doc_number' => ['nullable','string','max:100'],
             'position' => ['nullable', 'string', 'max:255'],
             'hire_date' => ['nullable', 'date'],
             'cv' => ['required', 'file', 'mimes:pdf,doc,docx'],
             'contract' => ['required', 'file', 'mimes:pdf,doc,docx'],
+            'identity_document' => ['nullable','file','mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
 
         $employee = Employee::create([
@@ -46,6 +50,9 @@ class EmployeeController extends Controller
             'department_id' => $validated['department_id'] ?? null,
             'salary' => $validated['salary'],
             'bonus' => $validated['bonus'] ?? null,
+            'reference_full_name' => $validated['reference_full_name'] ?? null,
+            'reference_phone' => $validated['reference_phone'] ?? null,
+            'identity_doc_number' => $validated['identity_doc_number'] ?? null,
             'position' => $validated['position'] ?? null,
             'hire_date' => $validated['hire_date'] ?? null,
             'status' => 'active',
@@ -80,6 +87,19 @@ class EmployeeController extends Controller
             ]);
         }
 
+        if ($request->hasFile('identity_document')) {
+            $idFile = $request->file('identity_document');
+            $idName = 'identity_'.time().'.'.$idFile->getClientOriginalExtension();
+            $idPath = Storage::disk('public')->putFileAs($dir, $idFile, $idName);
+            EmployeeDocument::create([
+                'employee_id' => $employee->id,
+                'type' => 'identity',
+                'path' => $idPath,
+                'status' => 'pending',
+                'uploaded_by' => $uploaderId,
+            ]);
+        }
+
         return redirect()->route('hrm.employees.index')->with('status', 'Employee onboarded. Documents pending verification.');
     }
     public function edit(Employee $employee)
@@ -94,12 +114,34 @@ class EmployeeController extends Controller
             'department_id' => ['nullable','exists:departments,id'],
             'salary' => ['nullable','numeric','min:0'],
             'bonus' => ['nullable','numeric','min:0'],
+            'reference_full_name' => ['nullable','string','max:255'],
+            'reference_phone' => ['nullable','string','max:30'],
+            'identity_doc_number' => ['nullable','string','max:100'],
+            'identity_document' => ['nullable','file','mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
         $employee->update([
             'department_id' => $validated['department_id'] ?? $employee->department_id,
             'salary' => $validated['salary'] ?? $employee->salary,
             'bonus' => $validated['bonus'] ?? $employee->bonus,
+            'reference_full_name' => $validated['reference_full_name'] ?? $employee->reference_full_name,
+            'reference_phone' => $validated['reference_phone'] ?? $employee->reference_phone,
+            'identity_doc_number' => $validated['identity_doc_number'] ?? $employee->identity_doc_number,
         ]);
+
+        if ($request->hasFile('identity_document')) {
+            $uploaderId = Auth::id();
+            $dir = 'employee_docs/'.$employee->id;
+            $idFile = $request->file('identity_document');
+            $idName = 'identity_'.time().'.'.$idFile->getClientOriginalExtension();
+            $idPath = Storage::disk('public')->putFileAs($dir, $idFile, $idName);
+            EmployeeDocument::create([
+                'employee_id' => $employee->id,
+                'type' => 'identity',
+                'path' => $idPath,
+                'status' => 'pending',
+                'uploaded_by' => $uploaderId,
+            ]);
+        }
         return redirect()->route('hrm.employees.index')->with('status', 'Employee updated');
     }
 

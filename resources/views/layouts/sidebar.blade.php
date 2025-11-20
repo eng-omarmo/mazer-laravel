@@ -71,6 +71,8 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.index') ? 'active' : '' }}"><a href="{{ route('hrm.payroll.index') }}"><i class="bi bi-card-list"></i> List</a></li>
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.create') ? 'active' : '' }}"><a href="{{ route('hrm.payroll.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                    <li class="submenu-item {{ request()->is('hrm/payroll/batches*') ? 'active' : '' }}"><a href="{{ route('hrm.payroll.batches.index') }}"><i class="bi bi-collection"></i> Batches</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.payroll.batches.create') ? 'active' : '' }}"><a href="{{ route('hrm.payroll.batches.create', ['preview' => 0]) }}"><i class="bi bi-upload"></i> Post Payroll</a></li>
                 </ul>
             </li>
 

@@ -1,0 +1,156 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PayrollBatch;
+use App\Models\Payroll;
+use App\Models\Employee;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class PayrollBatchController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = PayrollBatch::query();
+        if ($request->filled('status')) $query->where('status', $request->string('status'));
+        if ($request->filled('year')) $query->where('year', (int) $request->input('year'));
+        if ($request->filled('month')) $query->where('month', (int) $request->input('month'));
+        $batches = $query->orderByDesc('year')->orderByDesc('month')->paginate(10)->appends($request->query());
+        return view('hrm.payroll-batches', compact('batches'));
+    }
+
+    public function create(Request $request)
+    {
+        $year = (int) $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+        $preview = $request->filled('preview');
+        $employees = collect();
+        if ($preview) {
+            $employees = Employee::where('status','active')->orderBy('first_name')->orderBy('last_name')->get();
+        }
+        return view('hrm.payroll-post', compact('year','month','preview','employees'));
+    }
+
+    public function store(Request $request)
+    {
+        $this->authorizeRole(['HR','Admin']);
+        $validated = $request->validate([
+            'year' => ['required','integer','min:2000','max:2100'],
+            'month' => ['required','integer','min:1','max:12'],
+            'lines' => ['required','array'],
+        ]);
+
+        if (PayrollBatch::where('year',$validated['year'])->where('month',$validated['month'])->exists()) {
+            return back()->withErrors(['month' => 'Payroll batch for selected month already exists']);
+        }
+
+        $batch = PayrollBatch::create([
+            'year' => $validated['year'],
+            'month' => $validated['month'],
+            'status' => 'draft',
+            'posted_by' => Auth::id(),
+            'posted_at' => now(),
+        ]);
+
+        $totalEmployees = 0;
+        $totalAmount = 0;
+
+        foreach ($validated['lines'] as $employeeId => $line) {
+            $basic = (float) ($line['basic_salary'] ?? 0);
+            $allow = (float) ($line['allowances'] ?? 0);
+            $deduct = (float) ($line['deductions'] ?? 0);
+            $net = $basic + $allow - $deduct;
+            Payroll::create([
+                'batch_id' => $batch->id,
+                'employee_id' => (int) $employeeId,
+                'year' => $validated['year'],
+                'month' => $validated['month'],
+                'basic_salary' => $basic,
+                'allowances' => $allow,
+                'deductions' => $deduct,
+                'net_pay' => $net,
+                'status' => 'draft',
+            ]);
+            $totalEmployees++;
+            $totalAmount += $net;
+        }
+
+        $batch->update([
+            'total_employees' => $totalEmployees,
+            'total_amount' => $totalAmount,
+        ]);
+
+        return redirect()->route('hrm.payroll.batches.show', $batch)->with('status','Payroll batch created');
+    }
+
+    public function show(PayrollBatch $batch)
+    {
+        $batch->load(['payrolls.employee']);
+        return view('hrm.payroll-batch-show', compact('batch'));
+    }
+
+    public function update(Request $request, PayrollBatch $batch)
+    {
+        $this->authorizeRole(['HR','Admin']);
+        if ($batch->status === 'approved') {
+            return back()->withErrors(['status' => 'Approved batches are locked']);
+        }
+        $validated = $request->validate([
+            'lines' => ['required','array'],
+        ]);
+        $totalAmount = 0;
+        foreach ($batch->payrolls as $p) {
+            $line = $validated['lines'][$p->id] ?? null;
+            if (!$line) continue;
+            $basic = (float) ($line['basic_salary'] ?? $p->basic_salary);
+            $allow = (float) ($line['allowances'] ?? $p->allowances);
+            $deduct = (float) ($line['deductions'] ?? $p->deductions);
+            $net = $basic + $allow - $deduct;
+            $p->update([
+                'basic_salary' => $basic,
+                'allowances' => $allow,
+                'deductions' => $deduct,
+                'net_pay' => $net,
+            ]);
+            $totalAmount += $net;
+        }
+        $batch->update(['total_amount' => $totalAmount]);
+        return back()->with('status','Batch updated');
+    }
+
+    public function submit(PayrollBatch $batch)
+    {
+        $this->authorizeRole(['HR','Admin']);
+        if ($batch->status !== 'draft') return back()->withErrors(['status' => 'Only draft batches can be submitted']);
+        $batch->update(['status' => 'submitted', 'submitted_by' => Auth::id(), 'submitted_at' => now()]);
+        return back()->with('status','Batch submitted');
+    }
+
+    public function approve(PayrollBatch $batch)
+    {
+        $this->authorizeRole(['Finance','Admin']);
+        if ($batch->status !== 'submitted') return back()->withErrors(['status' => 'Only submitted batches can be approved']);
+        $batch->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
+        foreach ($batch->payrolls as $p) {
+            $p->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
+        }
+        return back()->with('status','Batch approved');
+    }
+
+    public function reject(PayrollBatch $batch)
+    {
+        $this->authorizeRole(['Finance','Admin']);
+        if ($batch->status !== 'submitted') return back()->withErrors(['status' => 'Only submitted batches can be rejected']);
+        $batch->update(['status' => 'rejected', 'rejected_by' => Auth::id(), 'rejected_at' => now()]);
+        return back()->with('status','Batch rejected');
+    }
+
+    private function authorizeRole(array $roles)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role ?? 'HR', $roles)) {
+            abort(403);
+        }
+    }
+}

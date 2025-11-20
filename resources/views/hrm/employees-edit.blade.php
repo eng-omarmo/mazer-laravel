@@ -45,6 +45,26 @@
                             <input type="number" step="0.01" name="bonus" class="form-control" value="{{ old('bonus', $employee->bonus) }}">
                             @error('bonus')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Reference Full Name</label>
+                            <input type="text" name="reference_full_name" class="form-control" value="{{ old('reference_full_name', $employee->reference_full_name) }}">
+                            @error('reference_full_name')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Reference Phone Number</label>
+                            <input type="text" name="reference_phone" class="form-control" value="{{ old('reference_phone', $employee->reference_phone) }}">
+                            @error('reference_phone')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Identity Document Number</label>
+                            <input type="text" name="identity_doc_number" class="form-control" value="{{ old('identity_doc_number', $employee->identity_doc_number) }}">
+                            @error('identity_doc_number')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Identity Document (PDF/DOC/JPG/PNG)</label>
+                            <input type="file" name="identity_document" class="form-control">
+                            @error('identity_document')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
                     </div>
                     <div class="mt-3">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>

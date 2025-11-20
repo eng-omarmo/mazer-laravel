@@ -6,6 +6,7 @@ use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\PayrollBatchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -58,6 +59,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
         Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
         Route::post('/payroll/{payroll}/paid', [PayrollController::class, 'markPaid'])->name('payroll.paid');
+
+        Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
+        Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');
+        Route::post('/payroll/batches', [PayrollBatchController::class, 'store'])->name('payroll.batches.store');
+        Route::get('/payroll/batches/{batch}', [PayrollBatchController::class, 'show'])->name('payroll.batches.show');
+        Route::patch('/payroll/batches/{batch}', [PayrollBatchController::class, 'update'])->name('payroll.batches.update');
+        Route::post('/payroll/batches/{batch}/submit', [PayrollBatchController::class, 'submit'])->name('payroll.batches.submit');
+        Route::post('/payroll/batches/{batch}/approve', [PayrollBatchController::class, 'approve'])->name('payroll.batches.approve');
+        Route::post('/payroll/batches/{batch}/reject', [PayrollBatchController::class, 'reject'])->name('payroll.batches.reject');
     });
 });
 

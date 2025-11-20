@@ -74,6 +74,41 @@
 
                 <hr class="my-4">
 
+                <h5 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>Reference Person</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Full Name:</strong>
+                        <div>{{ $employee->reference_full_name ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Phone Number:</strong>
+                        <div>{{ $employee->reference_phone ?? '-' }}</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-md-6">
+                        <strong>Identity Document Number:</strong>
+                        <div>{{ $employee->identity_doc_number ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Identity Document File:</strong>
+                        <div>
+                            @php $idDoc = $employee->documents->firstWhere('type','identity'); @endphp
+                            @if($idDoc)
+                                <a href="{{ asset('storage/'.$idDoc->path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-person"></i> View Identity Document
+                                </a>
+                                <span class="badge bg-{{ $idDoc->status === 'approved' ? 'success' : ($idDoc->status === 'rejected' ? 'danger' : 'warning') }} ms-2">{{ ucfirst($idDoc->status) }}</span>
+                            @else
+                                -
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
                 <h5><i class="bi bi-folder2-open me-2"></i>Documents</h5>
                 <ul class="list-group mt-3">
                     @foreach($employee->documents as $doc)
