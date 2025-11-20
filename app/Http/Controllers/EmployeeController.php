@@ -36,6 +36,7 @@ class EmployeeController extends Controller
             'reference_full_name' => ['nullable','string','max:255'],
             'reference_phone' => ['nullable','string','max:30'],
             'identity_doc_number' => ['nullable','string','max:100'],
+            'fingerprint_id' => ['nullable','string','max:100','unique:employees,fingerprint_id'],
             'position' => ['nullable', 'string', 'max:255'],
             'hire_date' => ['nullable', 'date'],
             'cv' => ['required', 'file', 'mimes:pdf,doc,docx'],
@@ -53,6 +54,7 @@ class EmployeeController extends Controller
             'reference_full_name' => $validated['reference_full_name'] ?? null,
             'reference_phone' => $validated['reference_phone'] ?? null,
             'identity_doc_number' => $validated['identity_doc_number'] ?? null,
+            'fingerprint_id' => $validated['fingerprint_id'] ?? null,
             'position' => $validated['position'] ?? null,
             'hire_date' => $validated['hire_date'] ?? null,
             'status' => 'active',
@@ -117,6 +119,7 @@ class EmployeeController extends Controller
             'reference_full_name' => ['nullable','string','max:255'],
             'reference_phone' => ['nullable','string','max:30'],
             'identity_doc_number' => ['nullable','string','max:100'],
+            'fingerprint_id' => ['nullable','string','max:100','unique:employees,fingerprint_id,'.$employee->id],
             'identity_document' => ['nullable','file','mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
         $employee->update([
@@ -126,6 +129,7 @@ class EmployeeController extends Controller
             'reference_full_name' => $validated['reference_full_name'] ?? $employee->reference_full_name,
             'reference_phone' => $validated['reference_phone'] ?? $employee->reference_phone,
             'identity_doc_number' => $validated['identity_doc_number'] ?? $employee->identity_doc_number,
+            'fingerprint_id' => $validated['fingerprint_id'] ?? $employee->fingerprint_id,
         ]);
 
         if ($request->hasFile('identity_document')) {

@@ -61,6 +61,11 @@
                             @error('identity_doc_number')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label class="form-label">Fingerprint ID</label>
+                            <input type="text" name="fingerprint_id" class="form-control" value="{{ old('fingerprint_id', $employee->fingerprint_id) }}">
+                            @error('fingerprint_id')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Identity Document (PDF/DOC/JPG/PNG)</label>
                             <input type="file" name="identity_document" class="form-control">
                             @error('identity_document')<small class="text-danger">{{ $message }}</small>@enderror

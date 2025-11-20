@@ -76,6 +76,19 @@
                 </ul>
             </li>
 
+            <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-calendar-day"></i>
+                    <span>Attendance</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('hrm.attendance.index') ? 'active' : '' }}"><a href="{{ route('hrm.attendance.index') }}"><i class="bi bi-card-list"></i> Daily Logs</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.attendance.create') ? 'active' : '' }}"><a href="{{ route('hrm.attendance.create') }}"><i class="bi bi-plus-circle"></i> Mark Attendance</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.attendance.summary') ? 'active' : '' }}"><a href="{{ route('hrm.attendance.summary') }}"><i class="bi bi-bar-chart"></i> Monthly Summary</a></li>
+                    <li class="submenu-item"><a href="{{ route('hrm.attendance.my') }}"><i class="bi bi-person-badge"></i> My Attendance</a></li>
+                </ul>
+            </li>
+
             <li class="sidebar-title">Administration</li>
 
             <li class="sidebar-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
@@ -84,6 +97,29 @@
                     <span>Account</span>
                 </a>
             </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" data-bs-toggle="modal" data-bs-target="#logoutConfirm">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+            <div class="modal fade" id="logoutConfirm" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Are you sure you want to log out?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-danger">Yes, Logout</button>
+                            </form>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </ul>
     </div>
 </div>

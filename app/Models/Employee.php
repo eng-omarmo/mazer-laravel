@@ -19,6 +19,7 @@ class Employee extends Model
         'reference_full_name',
         'reference_phone',
         'identity_doc_number',
+        'fingerprint_id',
         'position',
         'hire_date',
         'status',

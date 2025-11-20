@@ -105,6 +105,10 @@
                             @endif
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <strong>Fingerprint ID:</strong>
+                        <div>{{ $employee->fingerprint_id ?? '-' }}</div>
+                    </div>
                 </div>
 
                 <hr class="my-4">

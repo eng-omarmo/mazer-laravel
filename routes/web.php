@@ -7,6 +7,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayrollBatchController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -59,6 +60,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
         Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
         Route::post('/payroll/{payroll}/paid', [PayrollController::class, 'markPaid'])->name('payroll.paid');
+
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/create', [AttendanceController::class, 'create'])->name('attendance.create');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+        Route::get('/attendance/{log}/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
+        Route::patch('/attendance/{log}', [AttendanceController::class, 'update'])->name('attendance.update');
+        Route::get('/attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
+        Route::get('/attendance/export/csv', [AttendanceController::class, 'exportCsv'])->name('attendance.export.csv');
+        Route::get('/attendance/my', [AttendanceController::class, 'myHistory'])->name('attendance.my');
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');

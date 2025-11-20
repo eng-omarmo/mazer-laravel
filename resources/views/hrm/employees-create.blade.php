@@ -62,6 +62,11 @@
                             <input type="text" name="identity_doc_number" value="{{ old('identity_doc_number') }}" class="form-control">
                             @error('identity_doc_number')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fingerprint ID</label>
+                            <input type="text" name="fingerprint_id" value="{{ old('fingerprint_id') }}" class="form-control">
+                            @error('fingerprint_id')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
                     </div>
 
 

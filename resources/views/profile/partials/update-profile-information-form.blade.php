@@ -13,7 +13,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6" enctype="multipart/form-data">
         @csrf
         @method('patch')
 
@@ -21,6 +21,27 @@
             <x-input-label for="name" :value="__('Name')" />
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
+        </div>
+
+        <div>
+            <x-input-label for="phone" :value="__('Phone')" />
+            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->phone)" autocomplete="tel" />
+            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+        </div>
+
+        <div>
+            <x-input-label for="position" :value="__('Position')" />
+            <x-text-input id="position" name="position" type="text" class="mt-1 block w-full" :value="old('position', $user->position)" autocomplete="organization-title" />
+            <x-input-error class="mt-2" :messages="$errors->get('position')" />
+        </div>
+
+        <div>
+            <x-input-label for="photo" :value="__('Photo')" />
+            <input id="photo" name="photo" type="file" class="mt-1 block w-full" accept="image/*" />
+            @if($user->photo_path)
+                <img src="{{ asset('storage/'.$user->photo_path) }}" alt="Profile Photo" class="mt-2 h-16 w-16 rounded-full object-cover">
+            @endif
+            <x-input-error class="mt-2" :messages="$errors->get('photo')" />
         </div>
 
         <div>

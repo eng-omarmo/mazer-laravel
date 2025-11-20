@@ -1,18 +1,18 @@
 @extends('layouts.master')
-@section('title','Leaves')
+@section('title','Attendance')
 @section('content')
 <div class="page-heading">
     <div class="page-title">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Employee Leaves</h3>
-                <p class="text-subtitle text-muted">List and manage leave requests</p>
+                <h3>Attendance</h3>
+                <p class="text-subtitle text-muted">Daily logs</p>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{{ url('/') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Leaves</li>
+                        <li class="breadcrumb-item active" aria-current="page">Attendance</li>
                     </ol>
                 </nav>
             </div>
@@ -24,9 +24,39 @@
                 @if (session('status'))
                     <div class="alert alert-success">{{ session('status') }}</div>
                 @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger">{{ $errors->first() }}</div>
+                @endif
 
-                <div class="mb-3">
-                    <a href="{{ route('hrm.leave.create') }}" class="btn btn-primary">Request Leave</a>
+                <div class="d-flex mb-3 align-items-end gap-2">
+                    <a href="{{ route('hrm.attendance.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Mark Attendance</a>
+                    <form class="row g-2" method="get" action="{{ route('hrm.attendance.index') }}">
+                        <div class="col">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="date" value="{{ request('date') }}" class="form-control">
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Department</label>
+                            <select name="department_id" class="form-select">
+                                <option value="">All</option>
+                                @foreach($departments as $d)
+                                    <option value="{{ $d->id }}" {{ request('department_id') == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All</option>
+                                @foreach(['present','absent','late','early_leave'] as $s)
+                                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ', $s)) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+                        </div>
+                    </form>
                 </div>
 
                 <div class="table-responsive">
@@ -34,48 +64,37 @@
                         <thead>
                             <tr>
                                 <th>Employee</th>
-                                <th>Type</th>
-                                <th>Period</th>
+                                <th>Department</th>
+                                <th>Date</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($leaves as $leave)
+                            @forelse($logs as $log)
                                 <tr>
-                                    <td>{{ $leave->employee->first_name }} {{ $leave->employee->last_name }}</td>
-                                    <td>{{ $leave->type }}</td>
-                                    <td>{{ $leave->start_date }} → {{ $leave->end_date }}</td>
-                                    <td><span class="badge bg-{{ $leave->status === 'approved' ? 'success' : ($leave->status === 'rejected' ? 'danger' : 'warning') }}">{{ ucfirst($leave->status) }}</span></td>
+                                    <td>{{ $log->employee->first_name }} {{ $log->employee->last_name }}</td>
+                                    <td>{{ optional($log->employee->department)->name }}</td>
+                                    <td>{{ $log->date }}</td>
+                                    <td>{{ $log->check_in ?? '-' }}</td>
+                                    <td>{{ $log->check_out ?? '-' }}</td>
                                     <td>
-                                        @if($leave->status === 'pending')
-                                            <form method="post" action="{{ route('hrm.leave.approve', $leave) }}" class="d-inline">@csrf<button class="btn btn-success btn-sm">Approve</button></form>
-                                            <button class="btn btn-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#reject-{{ $leave->id }}">Reject</button>
-                                            <div class="modal fade" id="reject-{{ $leave->id }}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header"><h5 class="modal-title">Reject Leave</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                                        <form method="post" action="{{ route('hrm.leave.reject', $leave) }}">@csrf
-                                                            <div class="modal-body">
-                                                                <label class="form-label">Reason</label>
-                                                                <textarea name="reason" class="form-control" rows="3"></textarea>
-                                                            </div>
-                                                            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Reject</button></div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
+                                        <span class="badge bg-{{ $log->status === 'present' ? 'success' : ($log->status === 'absent' ? 'secondary' : ($log->status === 'late' ? 'warning' : 'info')) }}">{{ ucfirst(str_replace('_',' ', $log->status)) }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('hrm.attendance.edit', $log) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil-square"></i> Edit</a>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center">No leave requests</td></tr>
+                                <tr><td colspan="7" class="text-center">No logs</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                {{ $leaves->links() }}
+                {{ $logs->links() }}
             </div>
         </div>
     </section>

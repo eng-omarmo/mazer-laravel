@@ -16,8 +16,10 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $logs = \App\Models\ActivityLog::where('user_id', $request->user()->id)->latest()->limit(10)->get();
         return view('profile.edit', [
             'user' => $request->user(),
+            'logs' => $logs,
         ]);
     }
 
@@ -26,7 +28,12 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('profile_photos/'.$request->user()->id, 'public');
+            $data['photo_path'] = $path;
+        }
+        $request->user()->fill($data);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
