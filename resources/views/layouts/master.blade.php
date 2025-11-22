@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') - Sabco HRM Managment System</title>
+    <title>@yield('title') - Ramaas HRM Managment System</title>
     @yield('stylesfirst')
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
             <footer>
                 <div class="footer clearfix mb-0 text-muted">
                     <div class="float-start">
-                        <p>2025 &copy; Sabco HRM Managment System</p>
+                        <p>2025 &copy; Ramaas HRM Managment System</p>
                     </div>
                     <div class="float-end">
                         <p>Crafted with <span class="text-danger"><i class="bi bi-heart"></i></span> by <a href="https://porfolia.vercel.app/" target="_blank">Eng Omar Mohamud Omar </a></p>
