@@ -9,6 +9,7 @@ use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayrollBatchController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\HrmReportsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -83,7 +84,14 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
         Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
+
+        Route::get('/reports/employees', [HrmReportsController::class, 'employees'])->name('reports.employees');
+        Route::get('/reports/employees.csv', [HrmReportsController::class, 'employeesCsv'])->name('reports.employees.csv');
+        Route::get('/reports/leaves', [HrmReportsController::class, 'leaves'])->name('reports.leaves');
+        Route::get('/reports/leaves.csv', [HrmReportsController::class, 'leavesCsv'])->name('reports.leaves.csv');
+        Route::get('/reports/attendance', [HrmReportsController::class, 'attendance'])->name('reports.attendance');
+        Route::get('/reports/payroll', [HrmReportsController::class, 'payroll'])->name('reports.payroll');
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

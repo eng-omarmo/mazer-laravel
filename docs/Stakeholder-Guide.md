@@ -130,3 +130,84 @@ Save images under `mazer-laravel/docs/images/` and name them as below.
 - Insufficient Wallet Balance: Deposit funds in `Wallet` before approving a batch.
 - Access Denied on Approve/Paid: Ensure Finance/Admin role.
 - Batch Not Marked Paid: Confirm all payrolls in the batch are `paid`.
+
+## Features Report
+
+- Employees
+  - Create, edit, view employee profiles with department linkage.
+  - Attach and verify documents; search and paginate lists.
+- Departments
+  - CRUD for departments; assign heads; list members via employees.
+- Leaves
+  - Request, approve, reject; filter by status, type, employee, date range.
+- Attendance
+  - Daily logs with department filter; monthly summary; CSV export; personal history.
+- Payroll (Items)
+  - Per-employee pay details (salary, allowances, deductions, net pay).
+  - Status flow: `draft → approved → paid`; individual item approval and payment.
+- Payroll Batches
+  - Group items by month/year; actions: submit, approve, reject, mark paid.
+  - Auto-batch-paid when all lines are paid; totals maintained on item changes.
+- Wallet
+  - Deposit funds; approval deducts batch total; prevents approval if insufficient.
+- Account
+  - Update profile and password; recent activity table; Mazer-styled UI.
+- Security
+  - Role checks for Finance/Admin on batch approvals and payments.
+- UX
+  - Mazer admin template; Bootstrap forms; responsive cards and tables.
+- Reporting
+  - Dashboard badges and status visibility; attendance CSV export; batch totals.
+- Roadmap
+  - Payment gateway integration; audit logs; multi-wallet; analytics widgets.
+
+## HRM Reports
+
+### Employee Report
+- Purpose: Provide visibility into workforce composition and status.
+- Key Fields: Name, Department, Position, Hire Date, Status (active/inactive), Document compliance.
+- Filters: Department, Status, Position, Hire Date range.
+- Metrics:
+  - Headcount per department.
+  - Active vs. inactive ratio.
+  - Compliance rate (verified documents / total documents).
+- Actions: View profile, update details, upload/verify documents.
+- Export: CSV (recommended for headcount and compliance summaries).
+- Source Views: `HRM → Employees` list and employee detail pages.
+
+### Leave Report
+- Purpose: Track leave utilization and approval outcomes.
+- Key Fields: Employee, Type (annual, sick, etc.), Status (pending/approved/rejected), Start/End Dates, Duration.
+- Filters: Status, Type, Employee, Date range.
+- Metrics:
+  - Approval rate by department and leave type.
+  - Average leave duration.
+  - Pending requests aging (days since request).
+- Actions: Approve/Reject, edit leave entries.
+- Export: CSV for HR audit and monthly summaries.
+- Source Views: `HRM → Leaves` list with filters.
+
+### Attendance Report
+- Purpose: Monitor daily presence and monthly summaries.
+- Key Fields: Date, Employee, Department, Status (present/absent/late), Notes.
+- Filters: Date, Status, Department.
+- Metrics:
+  - Attendance rate by department and date range.
+  - Late occurrences per employee.
+  - Absence trends (weekly/monthly).
+- Actions: Add/Edit daily logs, export monthly summary.
+- Export: CSV (built-in for monthly summary).
+- Source Views: `HRM → Attendance` (Daily Logs and Monthly Summary).
+
+### Payroll Report
+- Purpose: Analyze payroll costs and status progression.
+- Key Fields (Items): Employee, Year, Month, Basic Salary, Allowances, Deductions, Net Pay, Status.
+- Key Fields (Batches): Year, Month, Total Employees, Total Amount, Status, Submitted/Approved/Paid timestamps.
+- Filters: Status (`draft/approved/paid`), Year, Month, Employee.
+- Metrics:
+  - Total payroll cost per month/year.
+  - Allowance and deduction distributions.
+  - Approval velocity (submitted → approved time), payment completion rate.
+- Actions: Approve/Mark Paid at batch level; edit or approve items.
+- Export: CSV recommended via custom export (future enhancement) or database export.
+- Source Views: `HRM → Payroll` (items) and `HRM → Payroll → Batches` (batch summaries).

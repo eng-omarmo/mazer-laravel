@@ -83,9 +83,7 @@
                 </a>
             </li>
 
-            
-
-            <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
+                <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-calendar-day"></i>
                     <span>Attendance</span>
@@ -97,6 +95,21 @@
 
                 </ul>
             </li>
+
+            <li class="sidebar-item has-sub {{ request()->is('hrm/reports*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Reports</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.employees') ? 'active' : '' }}"><a href="{{ route('hrm.reports.employees') }}"><i class="bi bi-people"></i> Employee</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.leaves') ? 'active' : '' }}"><a href="{{ route('hrm.reports.leaves') }}"><i class="bi bi-calendar-check"></i> Leave</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.attendance') ? 'active' : '' }}"><a href="{{ route('hrm.reports.attendance') }}"><i class="bi bi-calendar-day"></i> Attendance</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.payroll') ? 'active' : '' }}"><a href="{{ route('hrm.reports.payroll') }}"><i class="bi bi-cash-stack"></i> Payroll</a></li>
+                </ul>
+            </li>
+
+
 
             <li class="sidebar-title">Administration</li>
 
