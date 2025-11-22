@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PayrollBatch;
 use App\Models\Payroll;
 use App\Models\Employee;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -131,6 +132,11 @@ class PayrollBatchController extends Controller
     {
         $this->authorizeRole(['Finance','Admin']);
         if ($batch->status !== 'submitted') return back()->withErrors(['status' => 'Only submitted batches can be approved']);
+        $wallet = Wallet::main();
+        if ($wallet->balance < ($batch->total_amount ?? 0)) {
+            return back()->withErrors(['status' => 'Insufficient wallet balance']);
+        }
+        $wallet->update(['balance' => $wallet->balance - ($batch->total_amount ?? 0)]);
         $batch->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
         foreach ($batch->payrolls as $p) {
             $p->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
