@@ -7,7 +7,6 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayrollBatchController;
-use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;

@@ -13,7 +13,7 @@ class Wallet extends Model
 
     public static function main(): self
     {
-        $wallet = static::where('name','Main').first();
+        $wallet = static::where('name','Main')->first();
         if (!$wallet) {
             $wallet = static::create(['name' => 'Main', 'balance' => 0, 'currency' => 'USD']);
         }

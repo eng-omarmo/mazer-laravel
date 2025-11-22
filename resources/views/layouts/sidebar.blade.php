@@ -83,16 +83,7 @@
                 </a>
             </li>
 
-            <li class="sidebar-item has-sub {{ request()->is('hrm/transactions*') ? 'active' : '' }}">
-                <a href="#" class="sidebar-link">
-                    <i class="bi bi-wallet2"></i>
-                    <span>Transactions</span>
-                </a>
-                <ul class="submenu" style="display: none;">
-                    <li class="submenu-item {{ request()->routeIs('hrm.transactions.index') ? 'active' : '' }}"><a href="{{ route('hrm.transactions.index') }}"><i class="bi bi-card-list"></i> List</a></li>
-                    <li class="submenu-item {{ request()->routeIs('hrm.transactions.create') ? 'active' : '' }}"><a href="{{ route('hrm.transactions.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
-                </ul>
-            </li>
+            
 
             <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
