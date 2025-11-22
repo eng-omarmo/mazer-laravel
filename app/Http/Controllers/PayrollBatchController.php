@@ -146,6 +146,19 @@ class PayrollBatchController extends Controller
         return back()->with('status','Batch rejected');
     }
 
+    public function markPaid(PayrollBatch $batch)
+    {
+        $this->authorizeRole(['Finance','Admin']);
+        if ($batch->status !== 'approved') return back()->withErrors(['status' => 'Only approved batches can be paid']);
+        foreach ($batch->payrolls as $p) {
+            if ($p->status !== 'paid') {
+                $p->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+            }
+        }
+        $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+        return back()->with('status','Batch marked as paid');
+    }
+
     private function authorizeRole(array $roles)
     {
         $user = Auth::user();

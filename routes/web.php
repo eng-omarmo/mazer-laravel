@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/payroll/batches/{batch}/submit', [PayrollBatchController::class, 'submit'])->name('payroll.batches.submit');
         Route::post('/payroll/batches/{batch}/approve', [PayrollBatchController::class, 'approve'])->name('payroll.batches.approve');
         Route::post('/payroll/batches/{batch}/reject', [PayrollBatchController::class, 'reject'])->name('payroll.batches.reject');
+        Route::post('/payroll/batches/{batch}/paid', [PayrollBatchController::class, 'markPaid'])->name('payroll.batches.paid');
     });
 });
 

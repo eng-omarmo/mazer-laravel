@@ -68,12 +68,19 @@ class PayrollController extends Controller
         ]);
         $net = (float) $validated['basic_salary'] + (float) ($validated['allowances'] ?? 0) - (float) ($validated['deductions'] ?? 0);
         $payroll->update(array_merge($validated, [ 'net_pay' => $net ]));
+        $this->recalcBatchTotals($payroll);
         return redirect()->route('hrm.payroll.index')->with('status', 'Payroll updated');
     }
 
     public function destroy(Payroll $payroll)
     {
+        $batchId = $payroll->batch_id;
         $payroll->delete();
+        if ($batchId) {
+            $batchPayroll = new Payroll();
+            $batchPayroll->batch_id = $batchId;
+            $this->recalcBatchTotals($batchPayroll);
+        }
         return back()->with('status', 'Payroll deleted');
     }
 
@@ -94,6 +101,29 @@ class PayrollController extends Controller
             'paid_by' => Auth::id(),
             'paid_at' => now(),
         ]);
+        if ($payroll->batch_id) {
+            $batch = $payroll->batch;
+            if ($batch) {
+                $allPaid = $batch->payrolls()->where('status', '!=', 'paid')->count() === 0;
+                if ($allPaid && $batch->status !== 'paid') {
+                    $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                }
+                $this->recalcBatchTotals($payroll);
+            }
+        }
         return back()->with('status', 'Payroll marked as paid');
+    }
+
+    private function recalcBatchTotals(Payroll $payroll)
+    {
+        if (!$payroll->batch_id) return;
+        $batch = $payroll->batch()->first();
+        if (!$batch) return;
+        $totalAmount = $batch->payrolls()->sum('net_pay');
+        $totalEmployees = $batch->payrolls()->count();
+        $batch->update([
+            'total_amount' => $totalAmount,
+            'total_employees' => $totalEmployees,
+        ]);
     }
 }

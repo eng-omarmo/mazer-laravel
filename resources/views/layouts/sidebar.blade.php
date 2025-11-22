@@ -85,7 +85,7 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.attendance.index') ? 'active' : '' }}"><a href="{{ route('hrm.attendance.index') }}"><i class="bi bi-card-list"></i> Daily Logs</a></li>
                     <li class="submenu-item {{ request()->routeIs('hrm.attendance.create') ? 'active' : '' }}"><a href="{{ route('hrm.attendance.create') }}"><i class="bi bi-plus-circle"></i> Mark Attendance</a></li>
                     <li class="submenu-item {{ request()->routeIs('hrm.attendance.summary') ? 'active' : '' }}"><a href="{{ route('hrm.attendance.summary') }}"><i class="bi bi-bar-chart"></i> Monthly Summary</a></li>
-                    <li class="submenu-item"><a href="{{ route('hrm.attendance.my') }}"><i class="bi bi-person-badge"></i> My Attendance</a></li>
+
                 </ul>
             </li>
 
@@ -97,29 +97,24 @@
                     <span>Account</span>
                 </a>
             </li>
-            <li class="sidebar-item">
-                <a href="#" class="sidebar-link" data-bs-toggle="modal" data-bs-target="#logoutConfirm">
+            <li class="sidebar-item text-center">
+                <button type="button" class="sidebar-link" id="logoutButton">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Logout</span>
-                </a>
+                </button>
             </li>
-            <div class="modal fade" id="logoutConfirm" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Are you sure you want to log out?</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-footer">
-                            <form method="post" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-danger">Yes, Logout</button>
-                            </form>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
+            <form action="{{ route('logout') }}" method="POST" id="logoutForm" class="d-none">
+                @csrf
+            </form>
+
+            <script>
+                document.getElementById('logoutButton').addEventListener('click', function() {
+                    document.getElementById('logoutForm').submit();
+                });
+            </script>
+
+
         </ul>
     </div>
 </div>

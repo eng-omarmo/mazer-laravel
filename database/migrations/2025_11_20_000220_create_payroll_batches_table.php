@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->unsignedSmallInteger('year');
             $table->unsignedTinyInteger('month');
-            $table->enum('status', ['draft','submitted','approved','rejected'])->default('draft');
+            $table->enum('status', ['draft','submitted','approved','rejected','paid'])->default('draft');
             $table->unsignedInteger('total_employees')->default(0);
             $table->decimal('total_amount', 14, 2)->default(0);
             $table->unsignedBigInteger('posted_by')->nullable();
@@ -22,6 +22,8 @@ return new class extends Migration {
             $table->timestamp('approved_at')->nullable();
             $table->unsignedBigInteger('rejected_by')->nullable();
             $table->timestamp('rejected_at')->nullable();
+            $table->unsignedBigInteger('paid_by')->nullable();
+            $table->timestamp('paid_at')->nullable();
             $table->timestamps();
             $table->unique(['year','month']);
             $table->index(['status']);

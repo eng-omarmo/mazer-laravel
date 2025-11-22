@@ -29,7 +29,7 @@
                 @endif
 
                 <div class="mb-3 d-flex gap-2 align-items-center">
-                    <span><strong>Status:</strong> <span class="badge bg-{{ $batch->status === 'approved' ? 'success' : ($batch->status === 'submitted' ? 'primary' : ($batch->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($batch->status) }}</span></span>
+                    <span><strong>Status:</strong> <span class="badge bg-{{ in_array($batch->status,['approved','paid']) ? 'success' : ($batch->status === 'submitted' ? 'primary' : ($batch->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($batch->status) }}</span></span>
                     <span><strong>Total Employees:</strong> {{ $batch->total_employees }}</span>
                     <span><strong>Total Amount:</strong> {{ number_format($batch->total_amount,2) }}</span>
                 </div>
@@ -108,6 +108,12 @@
                         <form method="post" action="{{ route('hrm.payroll.batches.reject', $batch) }}">
                             @csrf
                             <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Reject</button>
+                        </form>
+                    @endif
+                    @if($batch->status === 'approved')
+                        <form method="post" action="{{ route('hrm.payroll.batches.paid', $batch) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-success"><i class="bi bi-cash"></i> Mark Batch Paid</button>
                         </form>
                     @endif
                 </div>

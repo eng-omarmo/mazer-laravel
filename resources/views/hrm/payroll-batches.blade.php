@@ -68,7 +68,7 @@
                                     <td>{{ $b->year }}-{{ str_pad($b->month,2,'0',STR_PAD_LEFT) }}</td>
                                     <td>{{ $b->total_employees }}</td>
                                     <td>{{ number_format($b->total_amount,2) }}</td>
-                                    <td><span class="badge bg-{{ $b->status === 'approved' ? 'success' : ($b->status === 'submitted' ? 'primary' : ($b->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($b->status) }}</span></td>
+                                    <td><span class="badge bg-{{ in_array($b->status,['approved','paid']) ? 'success' : ($b->status === 'submitted' ? 'primary' : ($b->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($b->status) }}</span></td>
                                     <td class="d-flex gap-1">
                                         <a href="{{ route('hrm.payroll.batches.show', $b) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i> Open</a>
                                     </td>
