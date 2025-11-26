@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <strong><i class="bi bi-gift"></i> Bonus:</strong>
+                        <strong><i class="bi bi-gift"></i> Commission:</strong>
                         <div>{{ $employee->bonus !== null ? number_format($employee->bonus,2) : '-' }}</div>
                     </div>
 
