@@ -52,7 +52,7 @@
                     </div>
                 </form>
                 <div class="row">
-                    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Allowances</h6><div class="h4">{{ number_format($totalAllow,2) }}</div></div></div></div>
+                    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Commissions</h6><div class="h4">{{ number_format($totalAllow,2) }}</div></div></div></div>
                     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Deductions</h6><div class="h4">{{ number_format($totalDeduct,2) }}</div></div></div></div>
                     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Payment Completion</h6><div class="h4">{{ $paymentCompletionRate }}%</div></div></div></div>
                     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Avg Approval Hours</h6><div class="h4">{{ $avgApprovalHours }}</div></div></div></div>

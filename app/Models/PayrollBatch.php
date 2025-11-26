@@ -10,8 +10,8 @@ class PayrollBatch extends Model
     use HasFactory;
 
     protected $fillable = [
-        'year','month','status','total_employees','total_amount',
-        'posted_by','posted_at','submitted_by','submitted_at','approved_by','approved_at','rejected_by','rejected_at'
+        'year', 'month', 'status', 'total_employees', 'total_amount',
+        'posted_by', 'posted_at', 'submitted_by', 'submitted_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at',
     ];
 
     public function payrolls()

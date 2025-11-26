@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
-use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -13,14 +13,16 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        $employees = Employee::with(['documents','department'])->latest()->paginate(10);
+        $employees = Employee::with(['documents', 'department'])->latest()->paginate(10);
         $departments = Department::orderBy('name')->get();
-        return view('hrm.employees', compact('employees','departments'));
+
+        return view('hrm.employees', compact('employees', 'departments'));
     }
 
     public function create()
     {
         $departments = Department::orderBy('name')->get();
+
         return view('hrm.employees-create', compact('departments'));
     }
 
@@ -30,18 +32,18 @@ class EmployeeController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:employees,email'],
-            'department_id' => ['nullable','exists:departments,id'],
-            'salary' => ['required','numeric','min:0'],
-            'bonus' => ['nullable','numeric','min:0'],
-            'reference_full_name' => ['nullable','string','max:255'],
-            'reference_phone' => ['nullable','string','max:30'],
-            'identity_doc_number' => ['nullable','string','max:100'],
-            'fingerprint_id' => ['nullable','string','max:100','unique:employees,fingerprint_id'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'salary' => ['required', 'numeric', 'min:0'],
+            'bonus' => ['nullable', 'numeric', 'min:0'],
+            'reference_full_name' => ['nullable', 'string', 'max:255'],
+            'reference_phone' => ['nullable', 'string', 'max:30'],
+            'identity_doc_number' => ['nullable', 'string', 'max:100'],
+            'fingerprint_id' => ['nullable', 'string', 'max:100', 'unique:employees,fingerprint_id'],
             'position' => ['nullable', 'string', 'max:255'],
             'hire_date' => ['nullable', 'date'],
             'cv' => ['required', 'file', 'mimes:pdf,doc,docx'],
             'contract' => ['required', 'file', 'mimes:pdf,doc,docx'],
-            'identity_document' => ['nullable','file','mimes:pdf,doc,docx,jpg,jpeg,png'],
+            'identity_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
 
         $employee = Employee::create([
@@ -104,23 +106,25 @@ class EmployeeController extends Controller
 
         return redirect()->route('hrm.employees.index')->with('status', 'Employee onboarded. Documents pending verification.');
     }
+
     public function edit(Employee $employee)
     {
         $departments = Department::orderBy('name')->get();
-        return view('hrm.employees-edit', compact('employee','departments'));
+
+        return view('hrm.employees-edit', compact('employee', 'departments'));
     }
 
     public function update(Request $request, Employee $employee)
     {
         $validated = $request->validate([
-            'department_id' => ['nullable','exists:departments,id'],
-            'salary' => ['nullable','numeric','min:0'],
-            'bonus' => ['nullable','numeric','min:0'],
-            'reference_full_name' => ['nullable','string','max:255'],
-            'reference_phone' => ['nullable','string','max:30'],
-            'identity_doc_number' => ['nullable','string','max:100'],
-            'fingerprint_id' => ['nullable','string','max:100','unique:employees,fingerprint_id,'.$employee->id],
-            'identity_document' => ['nullable','file','mimes:pdf,doc,docx,jpg,jpeg,png'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'salary' => ['nullable', 'numeric', 'min:0'],
+            'bonus' => ['nullable', 'numeric', 'min:0'],
+            'reference_full_name' => ['nullable', 'string', 'max:255'],
+            'reference_phone' => ['nullable', 'string', 'max:30'],
+            'identity_doc_number' => ['nullable', 'string', 'max:100'],
+            'fingerprint_id' => ['nullable', 'string', 'max:100', 'unique:employees,fingerprint_id,'.$employee->id],
+            'identity_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
         $employee->update([
             'department_id' => $validated['department_id'] ?? $employee->department_id,
@@ -146,12 +150,14 @@ class EmployeeController extends Controller
                 'uploaded_by' => $uploaderId,
             ]);
         }
+
         return redirect()->route('hrm.employees.index')->with('status', 'Employee updated');
     }
 
     public function show(Employee $employee)
     {
-        $employee->load(['department','documents']);
+        $employee->load(['department', 'documents']);
+
         return view('hrm.employees-show', compact('employee'));
     }
 }

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PayrollBatch;
-use App\Models\Payroll;
 use App\Models\Employee;
+use App\Models\Payroll;
+use App\Models\PayrollBatch;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,10 +14,17 @@ class PayrollBatchController extends Controller
     public function index(Request $request)
     {
         $query = PayrollBatch::query();
-        if ($request->filled('status')) $query->where('status', $request->string('status'));
-        if ($request->filled('year')) $query->where('year', (int) $request->input('year'));
-        if ($request->filled('month')) $query->where('month', (int) $request->input('month'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('year')) {
+            $query->where('year', (int) $request->input('year'));
+        }
+        if ($request->filled('month')) {
+            $query->where('month', (int) $request->input('month'));
+        }
         $batches = $query->orderByDesc('year')->orderByDesc('month')->paginate(10)->appends($request->query());
+
         return view('hrm.payroll-batches', compact('batches'));
     }
 
@@ -28,21 +35,22 @@ class PayrollBatchController extends Controller
         $preview = $request->filled('preview');
         $employees = collect();
         if ($preview) {
-            $employees = Employee::where('status','active')->orderBy('first_name')->orderBy('last_name')->get();
+            $employees = Employee::where('status', 'active')->orderBy('first_name')->orderBy('last_name')->get();
         }
-        return view('hrm.payroll-post', compact('year','month','preview','employees'));
+
+        return view('hrm.payroll-post', compact('year', 'month', 'preview', 'employees'));
     }
 
     public function store(Request $request)
     {
-        $this->authorizeRole(['HR','Admin']);
+        $this->authorizeRole(['HR', 'Admin']);
         $validated = $request->validate([
-            'year' => ['required','integer','min:2000','max:2100'],
-            'month' => ['required','integer','min:1','max:12'],
-            'lines' => ['required','array'],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'lines' => ['required', 'array'],
         ]);
 
-        if (PayrollBatch::where('year',$validated['year'])->where('month',$validated['month'])->exists()) {
+        if (PayrollBatch::where('year', $validated['year'])->where('month', $validated['month'])->exists()) {
             return back()->withErrors(['month' => 'Payroll batch for selected month already exists']);
         }
 
@@ -82,28 +90,31 @@ class PayrollBatchController extends Controller
             'total_amount' => $totalAmount,
         ]);
 
-        return redirect()->route('hrm.payroll.batches.show', $batch)->with('status','Payroll batch created');
+        return redirect()->route('hrm.payroll.batches.show', $batch)->with('status', 'Payroll batch created');
     }
 
     public function show(PayrollBatch $batch)
     {
         $batch->load(['payrolls.employee']);
+
         return view('hrm.payroll-batch-show', compact('batch'));
     }
 
     public function update(Request $request, PayrollBatch $batch)
     {
-        $this->authorizeRole(['HR','Admin']);
+        $this->authorizeRole(['HR', 'Admin']);
         if ($batch->status === 'approved') {
             return back()->withErrors(['status' => 'Approved batches are locked']);
         }
         $validated = $request->validate([
-            'lines' => ['required','array'],
+            'lines' => ['required', 'array'],
         ]);
         $totalAmount = 0;
         foreach ($batch->payrolls as $p) {
             $line = $validated['lines'][$p->id] ?? null;
-            if (!$line) continue;
+            if (! $line) {
+                continue;
+            }
             $basic = (float) ($line['basic_salary'] ?? $p->basic_salary);
             $allow = (float) ($line['allowances'] ?? $p->allowances);
             $deduct = (float) ($line['deductions'] ?? $p->deductions);
@@ -117,21 +128,27 @@ class PayrollBatchController extends Controller
             $totalAmount += $net;
         }
         $batch->update(['total_amount' => $totalAmount]);
-        return back()->with('status','Batch updated');
+
+        return back()->with('status', 'Batch updated');
     }
 
     public function submit(PayrollBatch $batch)
     {
-        $this->authorizeRole(['HR','Admin']);
-        if ($batch->status !== 'draft') return back()->withErrors(['status' => 'Only draft batches can be submitted']);
+        $this->authorizeRole(['HR', 'Admin']);
+        if ($batch->status !== 'draft') {
+            return back()->withErrors(['status' => 'Only draft batches can be submitted']);
+        }
         $batch->update(['status' => 'submitted', 'submitted_by' => Auth::id(), 'submitted_at' => now()]);
-        return back()->with('status','Batch submitted');
+
+        return back()->with('status', 'Batch submitted');
     }
 
     public function approve(PayrollBatch $batch)
     {
-        $this->authorizeRole(['Finance','Admin']);
-        if ($batch->status !== 'submitted') return back()->withErrors(['status' => 'Only submitted batches can be approved']);
+        $this->authorizeRole(['Finance', 'Admin']);
+        if ($batch->status !== 'submitted') {
+            return back()->withErrors(['status' => 'Only submitted batches can be approved']);
+        }
         $wallet = Wallet::main();
         if ($wallet->balance < ($batch->total_amount ?? 0)) {
             return back()->withErrors(['status' => 'Insufficient wallet balance']);
@@ -141,34 +158,90 @@ class PayrollBatchController extends Controller
         foreach ($batch->payrolls as $p) {
             $p->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
         }
-        return back()->with('status','Batch approved');
+
+        return back()->with('status', 'Batch approved');
     }
 
     public function reject(PayrollBatch $batch)
     {
-        $this->authorizeRole(['Finance','Admin']);
-        if ($batch->status !== 'submitted') return back()->withErrors(['status' => 'Only submitted batches can be rejected']);
+        $this->authorizeRole(['Finance', 'Admin']);
+        if ($batch->status !== 'submitted') {
+            return back()->withErrors(['status' => 'Only submitted batches can be rejected']);
+        }
         $batch->update(['status' => 'rejected', 'rejected_by' => Auth::id(), 'rejected_at' => now()]);
-        return back()->with('status','Batch rejected');
+
+        return back()->with('status', 'Batch rejected');
     }
 
     public function markPaid(PayrollBatch $batch)
     {
-        $this->authorizeRole(['Finance','Admin']);
-        if ($batch->status !== 'approved') return back()->withErrors(['status' => 'Only approved batches can be paid']);
+        $this->authorizeRole(['Finance', 'Admin']);
+        if ($batch->status !== 'approved') {
+            return back()->withErrors(['status' => 'Only approved batches can be paid']);
+        }
         foreach ($batch->payrolls as $p) {
             if ($p->status !== 'paid') {
                 $p->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
             }
         }
         $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
-        return back()->with('status','Batch marked as paid');
+
+        return back()->with('status', 'Batch marked as paid');
+    }
+
+    public function approveAllPending(Request $request)
+    {
+        // $this->authorizeRole(['Finance', 'Admin']);
+        $wallet = Wallet::main();
+        $approved = 0;
+        $skipped = 0;
+        $submittedBatches = PayrollBatch::where('status', 'submitted')->orderByDesc('year')->orderByDesc('month')->get();
+        foreach ($submittedBatches as $batch) {
+            $amount = (float) ($batch->total_amount ?? 0);
+            if ($wallet->balance >= $amount) {
+                $wallet->update(['balance' => $wallet->balance - $amount]);
+                $batch->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
+                foreach ($batch->payrolls as $p) {
+                    $p->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
+                }
+                $approved++;
+            } else {
+                $skipped++;
+            }
+        }
+        $message = $approved > 0 ? "Approved {$approved} submitted batch(es)" : 'No submitted batches approved';
+        if ($skipped > 0) {
+            $message .= "; Skipped {$skipped} due to insufficient wallet balance";
+        }
+
+        return redirect()->route('hrm.payroll.batches.index')->with('status', $message);
+    }
+
+    public function markPaidAllApproved(Request $request)
+    {
+        // $this->authorizeRole(['Finance', 'Admin']);
+        $approvedBatches = PayrollBatch::where('status', 'approved')->orderByDesc('year')->orderByDesc('month')->get();
+        $paid = 0;
+        foreach ($approvedBatches as $batch) {
+            foreach ($batch->payrolls as $p) {
+                if ($p->status !== 'paid') {
+                    $p->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                }
+            }
+            if ($batch->status !== 'paid') {
+                $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                $paid++;
+            }
+        }
+        $message = $paid > 0 ? "Marked {$paid} approved batch(es) as paid" : 'No approved batches to mark as paid';
+
+        return redirect()->route('hrm.payroll.batches.index')->with('status', $message);
     }
 
     private function authorizeRole(array $roles)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role ?? 'HR', $roles)) {
+        if (! $user || ! in_array($user->role ?? 'HR', $roles)) {
             abort(403);
         }
     }

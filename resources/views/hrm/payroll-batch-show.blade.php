@@ -100,21 +100,23 @@
                 @endif
 
                 <div class="mt-3 d-flex gap-2">
-                    @if($batch->status === 'submitted')
-                        <form method="post" action="{{ route('hrm.payroll.batches.approve', $batch) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle"></i> Approve</button>
-                        </form>
-                        <form method="post" action="{{ route('hrm.payroll.batches.reject', $batch) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Reject</button>
-                        </form>
-                    @endif
-                    @if($batch->status === 'approved')
-                        <form method="post" action="{{ route('hrm.payroll.batches.paid', $batch) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-success"><i class="bi bi-cash"></i> Mark Batch Paid</button>
-                        </form>
+                    @if(in_array(auth()->user()->role ?? 'HR', ['Finance','Admin']))
+                        @if($batch->status === 'submitted')
+                            <form method="post" action="{{ route('hrm.payroll.batches.approve', $batch) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle"></i> Approve</button>
+                            </form>
+                            <form method="post" action="{{ route('hrm.payroll.batches.reject', $batch) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Reject</button>
+                            </form>
+                        @endif
+                        @if($batch->status === 'approved')
+                            <form method="post" action="{{ route('hrm.payroll.batches.paid', $batch) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-success"><i class="bi bi-cash"></i> Mark Batch Paid</button>
+                            </form>
+                        @endif
                     @endif
                 </div>
             </div>

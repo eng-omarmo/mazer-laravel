@@ -83,7 +83,7 @@
                 </a>
             </li>
 
-                <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
+            <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-calendar-day"></i>
                     <span>Attendance</span>

@@ -29,26 +29,29 @@ class LeaveController extends Controller
         }
         $leaves = $query->orderByDesc('created_at')->paginate(10)->appends($request->query());
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
-        return view('hrm.leave', compact('leaves','employees'));
+
+        return view('hrm.leave', compact('leaves', 'employees'));
     }
 
     public function create()
     {
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
+
         return view('hrm.leave-create', compact('employees'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'employee_id' => ['required','exists:employees,id'],
-            'type' => ['required','string','max:100'],
-            'start_date' => ['required','date'],
-            'end_date' => ['required','date','after_or_equal:start_date'],
-            'reason' => ['nullable','string','max:500'],
+            'employee_id' => ['required', 'exists:employees,id'],
+            'type' => ['required', 'string', 'max:100'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
         EmployeeLeave::create($validated);
+
         return redirect()->route('hrm.leave.index')->with('status', 'Leave request submitted');
     }
 
@@ -59,44 +62,49 @@ class LeaveController extends Controller
             'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
+
         return back()->with('status', 'Leave approved');
     }
 
     public function reject(Request $request, EmployeeLeave $leave)
     {
-        $request->validate(['reason' => ['nullable','string','max:500']]);
+        $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
         $leave->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
             'reason' => $request->input('reason'),
         ]);
+
         return back()->with('status', 'Leave rejected');
     }
 
     public function edit(EmployeeLeave $leave)
     {
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
-        return view('hrm.leave-edit', compact('leave','employees'));
+
+        return view('hrm.leave-edit', compact('leave', 'employees'));
     }
 
     public function update(Request $request, EmployeeLeave $leave)
     {
         $validated = $request->validate([
-            'employee_id' => ['required','exists:employees,id'],
-            'type' => ['required','string','max:100'],
-            'start_date' => ['required','date'],
-            'end_date' => ['required','date','after_or_equal:start_date'],
-            'reason' => ['nullable','string','max:500'],
-            'status' => ['required','in:pending,approved,rejected'],
+            'employee_id' => ['required', 'exists:employees,id'],
+            'type' => ['required', 'string', 'max:100'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'reason' => ['nullable', 'string', 'max:500'],
+            'status' => ['required', 'in:pending,approved,rejected'],
         ]);
         $leave->update($validated);
+
         return redirect()->route('hrm.leave.index')->with('status', 'Leave updated');
     }
 
     public function destroy(EmployeeLeave $leave)
     {
         $leave->delete();
+
         return back()->with('status', 'Leave deleted');
     }
 }

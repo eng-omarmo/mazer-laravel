@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('employee_leaves', function (Blueprint $table) {
@@ -14,11 +15,11 @@ return new class extends Migration {
             $table->date('start_date');
             $table->date('end_date');
             $table->string('reason')->nullable();
-            $table->enum('status', ['pending','approved','rejected'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->timestamps();
-            $table->index(['employee_id','status']);
+            $table->index(['employee_id', 'status']);
         });
     }
 

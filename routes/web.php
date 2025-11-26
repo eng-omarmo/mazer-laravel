@@ -1,15 +1,15 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\DocumentVerificationController;
-use App\Http\Controllers\LeaveController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\PayrollController;
-use App\Http\Controllers\PayrollBatchController;
 use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\WalletController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DocumentVerificationController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HrmReportsController;
+use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\PayrollBatchController;
+use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/payroll/batches/{batch}/approve', [PayrollBatchController::class, 'approve'])->name('payroll.batches.approve');
         Route::post('/payroll/batches/{batch}/reject', [PayrollBatchController::class, 'reject'])->name('payroll.batches.reject');
         Route::post('/payroll/batches/{batch}/paid', [PayrollBatchController::class, 'markPaid'])->name('payroll.batches.paid');
+        Route::post('/payroll/batches/approve-all', [PayrollBatchController::class, 'approveAllPending'])->name('payroll.batches.approveAll');
+        Route::post('/payroll/batches/paid-all', [PayrollBatchController::class, 'markPaidAllApproved'])->name('payroll.batches.paidAll');
 
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
         Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->name('wallet.deposit');
@@ -94,4 +96,4 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

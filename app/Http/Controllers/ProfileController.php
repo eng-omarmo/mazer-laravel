@@ -17,6 +17,7 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         $logs = \App\Models\ActivityLog::where('user_id', $request->user()->id)->latest()->limit(10)->get();
+
         return view('profile.edit', [
             'user' => $request->user(),
             'logs' => $logs,

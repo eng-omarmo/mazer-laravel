@@ -22,34 +22,63 @@
         <div class="card">
             <div class="card-body">
                 @if (session('status'))
-                    <div class="alert alert-success">{{ session('status') }}</div>
+                <div class="alert alert-success">{{ session('status') }}</div>
                 @endif
 
-                <div class="d-flex mb-3 align-items-end gap-2">
-                    <a href="{{ route('hrm.payroll.batches.create') }}" class="btn btn-primary"><i class="bi bi-upload"></i> Post Payroll</a>
-                    <form class="row g-2" method="get" action="{{ route('hrm.payroll.batches.index') }}">
-                        <div class="col">
+                <div class="d-flex flex-wrap mb-3 align-items-end gap-2">
+
+                    <!-- Main Actions -->
+                    <a href="{{ route('hrm.payroll.batches.create') }}" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Post Payroll
+                    </a>
+
+                    <form method="post" action="{{ route('hrm.payroll.batches.approveAll') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check2-all"></i> Approve All Pending
+                        </button>
+                    </form>
+
+                    <form method="post" action="{{ route('hrm.payroll.batches.paidAll') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="bi bi-cash-coin"></i> Mark Paid All Approved
+                        </button>
+                    </form>
+
+                    <!-- Filter Form -->
+                    <form class="row g-2 ms-auto" method="get" action="{{ route('hrm.payroll.batches.index') }}">
+                        <div class="col-auto">
                             <label class="form-label">Year</label>
                             <input type="number" name="year" value="{{ request('year') }}" class="form-control" min="2000" max="2100">
                         </div>
-                        <div class="col">
+
+                        <div class="col-auto">
                             <label class="form-label">Month</label>
                             <input type="number" name="month" value="{{ request('month') }}" class="form-control" min="1" max="12">
                         </div>
-                        <div class="col">
+
+                        <div class="col-auto">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select">
                                 <option value="">All</option>
                                 @foreach(['draft','submitted','approved','rejected'] as $s)
-                                    <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                                <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
+                                    {{ ucfirst($s) }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-auto">
-                            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+
+                        <div class="col-auto d-flex align-items-end">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
                         </div>
                     </form>
+
                 </div>
+
 
                 <div class="table-responsive">
                     <table class="table table-striped">
@@ -64,23 +93,24 @@
                         </thead>
                         <tbody>
                             @forelse($batches as $b)
-                                <tr>
-                                    <td>{{ $b->year }}-{{ str_pad($b->month,2,'0',STR_PAD_LEFT) }}</td>
-                                    <td>{{ $b->total_employees }}</td>
-                                    <td>{{ number_format($b->total_amount,2) }}</td>
-                                    <td><span class="badge bg-{{ in_array($b->status,['approved','paid']) ? 'success' : ($b->status === 'submitted' ? 'primary' : ($b->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($b->status) }}</span></td>
-                                    <td class="d-flex gap-1">
-                                        <a href="{{ route('hrm.payroll.batches.show', $b) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i> Open</a>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td>{{ $b->year }}-{{ str_pad($b->month,2,'0',STR_PAD_LEFT) }}</td>
+                                <td>{{ $b->total_employees }}</td>
+                                <td>{{ number_format($b->total_amount,2) }}</td>
+                                <td><span class="badge bg-{{ in_array($b->status,['approved','paid']) ? 'success' : ($b->status === 'submitted' ? 'primary' : ($b->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($b->status) }}</span></td>
+                                <td class="d-flex gap-1">
+                                    <a href="{{ route('hrm.payroll.batches.show', $b) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i> Open</a>
+                                </td>
+                            </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center">No batches</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-center">No batches</td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                {{ $batches->links() }}
             </div>
         </div>
     </section>

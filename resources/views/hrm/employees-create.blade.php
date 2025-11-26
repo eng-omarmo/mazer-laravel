@@ -83,9 +83,9 @@
                             <select name="department_id" class="form-select">
                                 <option value="">Select department</option>
                                 @foreach($departments as $dept)
-                                    <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>
-                                        {{ $dept->code }} - {{ $dept->name }}
-                                    </option>
+                                <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>
+                                    {{ $dept->code }} - {{ $dept->name }}
+                                </option>
                                 @endforeach
                             </select>
                             @error('department_id')<small class="text-danger">{{ $message }}</small>@enderror
@@ -120,7 +120,7 @@
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Bonus</label>
+                            <label class="form-label">Commission</label>
                             <input type="number" step="0.01" name="bonus" value="{{ old('bonus') }}" class="form-control">
                             @error('bonus')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>

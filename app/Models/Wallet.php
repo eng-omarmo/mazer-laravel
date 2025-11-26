@@ -9,14 +9,15 @@ class Wallet extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','balance','currency'];
+    protected $fillable = ['name', 'balance', 'currency'];
 
     public static function main(): self
     {
-        $wallet = static::where('name','Main')->first();
-        if (!$wallet) {
+        $wallet = static::where('name', 'Main')->first();
+        if (! $wallet) {
             $wallet = static::create(['name' => 'Main', 'balance' => 0, 'currency' => 'USD']);
         }
+
         return $wallet;
     }
 }
