@@ -72,6 +72,21 @@ class PayrollBatchController extends Controller
             $allow = (float) ($line['allowances'] ?? 0);
             $deduct = (float) ($line['deductions'] ?? 0);
             $net = $basic + $allow - $deduct;
+            $advances = \App\Models\EmployeeAdvance::where('employee_id', (int) $employeeId)
+                ->whereIn('status', ['approved'])
+                ->orderBy('date')
+                ->get();
+            $remainingTotal = $advances->sum(function ($a) {
+                return (float) ($a->remaining_balance ?? $a->amount);
+            });
+            $sumInstallments = $advances->sum(function ($a) {
+                $rem = (float) ($a->remaining_balance ?? $a->amount);
+                $inst = (float) ($a->installment_amount ?? $rem);
+
+                return min($inst, $rem);
+            });
+            $plannedAdv = isset($line['advance_deduction']) ? (float) $line['advance_deduction'] : 0.0;
+            $plannedAdv = max(0, min($plannedAdv, $sumInstallments, $remainingTotal, $net));
             Payroll::create([
                 'batch_id' => $batch->id,
                 'employee_id' => (int) $employeeId,
@@ -81,6 +96,7 @@ class PayrollBatchController extends Controller
                 'allowances' => $allow,
                 'deductions' => $deduct,
                 'net_pay' => $net,
+                'advance_deduction' => $plannedAdv,
                 'status' => 'draft',
             ]);
             $totalEmployees++;
@@ -121,11 +137,15 @@ class PayrollBatchController extends Controller
             $allow = (float) ($line['allowances'] ?? $p->allowances);
             $deduct = (float) ($line['deductions'] ?? $p->deductions);
             $net = $basic + $allow - $deduct;
+            $plannedAdv = isset($line['advance_deduction']) ? max(0, (float) $line['advance_deduction']) : ($p->advance_deduction ?? 0.0);
+            // Clamp plannedAdv by net; detailed per-advance clamp will occur on payment
+            $plannedAdv = min($plannedAdv, $net);
             $p->update([
                 'basic_salary' => $basic,
                 'allowances' => $allow,
                 'deductions' => $deduct,
                 'net_pay' => $net,
+                'advance_deduction' => $plannedAdv,
             ]);
             $totalAmount += $net;
         }
@@ -207,6 +227,7 @@ class PayrollBatchController extends Controller
     {
         $employeeId = $payroll->employee_id;
         $available = max(0, (float) $payroll->net_pay);
+        $target = is_null($payroll->advance_deduction) ? INF : max(0, (float) $payroll->advance_deduction);
         $totalDeducted = 0.0;
         $details = [];
         if (! $employeeId || $available <= 0) {
@@ -220,6 +241,7 @@ class PayrollBatchController extends Controller
             if ($available <= 0) {
                 break;
             }
+            $remainingTarget = $target === INF ? INF : max(0, $target - $totalDeducted);
             $remaining = (float) ($adv->remaining_balance ?: $adv->amount);
             if ($remaining <= 0) {
                 if ($adv->status !== 'paid') {
@@ -229,7 +251,7 @@ class PayrollBatchController extends Controller
                 continue;
             }
             $installment = (float) ($adv->installment_amount ?: $remaining);
-            $deduct = min($installment, $remaining, $available);
+            $deduct = min($installment, $remaining, $available, $remainingTarget);
             if ($deduct <= 0) {
                 continue;
             }
@@ -250,6 +272,9 @@ class PayrollBatchController extends Controller
                 $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => 0, 'fully_repaid' => true];
             } else {
                 $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => $newRemaining, 'fully_repaid' => false];
+            }
+            if ($target !== INF && $totalDeducted >= $target) {
+                break;
             }
         }
 

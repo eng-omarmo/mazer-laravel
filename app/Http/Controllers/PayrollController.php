@@ -143,6 +143,7 @@ class PayrollController extends Controller
     {
         $employeeId = $payroll->employee_id;
         $available = max(0, (float) $payroll->net_pay);
+        $target = is_null($payroll->advance_deduction) ? INF : max(0, (float) $payroll->advance_deduction);
         $totalDeducted = 0.0;
         $details = [];
         if (! $employeeId || $available <= 0) {
@@ -156,6 +157,7 @@ class PayrollController extends Controller
             if ($available <= 0) {
                 break;
             }
+            $remainingTarget = $target === INF ? INF : max(0, $target - $totalDeducted);
             $remaining = (float) ($adv->remaining_balance ?: $adv->amount);
             if ($remaining <= 0) {
                 if ($adv->status !== 'paid') {
@@ -165,7 +167,7 @@ class PayrollController extends Controller
                 continue;
             }
             $installment = (float) ($adv->installment_amount ?: $remaining);
-            $deduct = min($installment, $remaining, $available);
+            $deduct = min($installment, $remaining, $available, $remainingTarget);
             if ($deduct <= 0) {
                 continue;
             }
@@ -186,6 +188,9 @@ class PayrollController extends Controller
                 $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => 0, 'fully_repaid' => true];
             } else {
                 $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => $newRemaining, 'fully_repaid' => false];
+            }
+            if ($target !== INF && $totalDeducted >= $target) {
+                break;
             }
         }
 

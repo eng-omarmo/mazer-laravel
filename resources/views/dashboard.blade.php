@@ -61,8 +61,33 @@
                     <div class="col-6 col-lg-2 col-md-4">
                         <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon secondary"><i class="bi bi-clipboard-check"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Batch Status</h6><h6 class="font-extrabold mb-0">{{ ucfirst($batchStatus) }}</h6></div></div></div></div>
                     </div>
-                    <div class="col-6 col-lg-2 col-md-4">
+
+                </div>
+
+                @php
+                    $approvedAdvances = \App\Models\EmployeeAdvance::whereIn('status',["approved"]) ->get();
+                    $advOutstandingTotal = $approvedAdvances->sum(function($a){ return (float) ($a->remaining_balance ?? $a->amount); });
+                    $advOverdueCount = $approvedAdvances->filter(function($a){ return $a->next_due_date && \Carbon\Carbon::parse($a->next_due_date)->isPast(); })->count();
+                    $startMonth = now()->startOfMonth(); $endMonth = now()->endOfMonth();
+                    $repayMonth = \App\Models\AdvanceTransaction::where('type','repayment')->whereBetween('created_at', [$startMonth, $endMonth])->sum('amount');
+                    $curAdvDeduct = \App\Models\Payroll::where('year',$curYear)->where('month',$curMonth)->sum('advance_deduction');
+                @endphp
+
+                <div class="row mt-3">
+                            <div class="col-6 col-lg-2 col-md-4">
                         <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon info"><i class="bi bi-wallet2"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Account Balance</h6><h6 class="font-extrabold mb-0">{{ number_format($walletBalance,2) }} {{ $walletCurrency }}</h6></div></div></div></div>
+                    </div>
+                      <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon danger"><i class="bi bi-exclamation-triangle"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Advances Outstanding</h6><h6 class="font-extrabold mb-0">{{ number_format($advOutstandingTotal,2) }}</h6></div></div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-3 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon danger"><i class="bi bi-bell-fill"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Overdue Advances</h6><h6 class="font-extrabold mb-0">{{ $advOverdueCount }}</h6></div></div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-3 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon primary"><i class="bi bi-arrow-repeat"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Repayments This Month</h6><h6 class="font-extrabold mb-0">{{ number_format($repayMonth,2) }}</h6></div></div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-3 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon info"><i class="bi bi-cash"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Payroll Adv. Deduction</h6><h6 class="font-extrabold mb-0">{{ number_format($curAdvDeduct,2) }}</h6></div></div></div></div>
                     </div>
                 </div>
 
@@ -159,6 +184,29 @@
                                                     <td>{{ $b->total_employees }}</td>
                                                     <td>{{ number_format($b->total_amount,2) }}</td>
                                                     <td><span class="badge bg-{{ in_array($b->status,['approved','paid']) ? 'success' : ($b->status === 'submitted' ? 'primary' : ($b->status === 'rejected' ? 'danger' : 'secondary')) }}">{{ ucfirst($b->status) }}</span></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        @php $latestRepay = \App\Models\AdvanceTransaction::with('advance.employee')->where('type','repayment')->orderByDesc('created_at')->limit(10)->get(); @endphp
+                        <div class="card">
+                            <div class="card-header"><h4>Recent Advance Repayments</h4></div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead><tr><th>Date</th><th>Employee</th><th>Amount</th><th>Reference</th></tr></thead>
+                                        <tbody>
+                                            @foreach($latestRepay as $tx)
+                                                <tr>
+                                                    <td>{{ $tx->created_at }}</td>
+                                                    <td>{{ optional($tx->advance->employee)->first_name }} {{ optional($tx->advance->employee)->last_name }}</td>
+                                                    <td>{{ number_format($tx->amount,2) }}</td>
+                                                    <td>{{ $tx->reference_type }} #{{ $tx->reference_id }}</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
