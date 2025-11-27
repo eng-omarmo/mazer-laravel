@@ -223,7 +223,7 @@ class PayrollBatchController extends Controller
 
         // validate date and year then add that to query
         $request->validate([
-            'year' => 'required|integer|min:2020|max:'.date('Y'),
+            'year' => 'required|integer|min:2020|max:' . date('Y'),
             'month' => 'required|integer|min:1|max:12',
         ]);
         // $this->authorizeRole(['Finance', 'Admin']);
