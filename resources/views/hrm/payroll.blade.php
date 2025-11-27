@@ -70,6 +70,7 @@
                                 <th>Allowances</th>
                                 <th>Deductions</th>
                                 <th>Net</th>
+                                <th>Advance Deduction Repayment</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -83,6 +84,28 @@
                                     <td>{{ number_format($p->allowances,2) }}</td>
                                     <td>{{ number_format($p->deductions,2) }}</td>
                                     <td><strong>{{ number_format($p->net_pay,2) }}</strong></td>
+                                    <td>
+                                        @php
+                                            $advances = \App\Models\EmployeeAdvance::where('employee_id',$p->employee_id)->whereIn('status',['approved'])->orderBy('date')->get();
+                                            $remaining = $advances->sum(fn($a) => (float)($a->remaining_balance ?? $a->amount));
+                                            $nextDue = $advances->filter(fn($a) => $a->next_due_date)->sortBy('next_due_date')->first();
+                                        @endphp
+                                        <div>
+                                            <span data-bs-toggle="tooltip" title="Original deduction from this payroll">Deducted: {{ number_format($p->advance_deduction ?? 0,2) }}</span>
+                                        </div>
+                                        <div>
+                                            <span data-bs-toggle="tooltip" title="Current repayment status">Status: {{ $remaining>0?'In Progress':'Settled' }}</span>
+                                        </div>
+                                        <div>
+                                            <span data-bs-toggle="tooltip" title="Remaining total across advances">Remaining: {{ number_format($remaining,2) }}</span>
+                                        </div>
+                                        <div>
+                                            <span data-bs-toggle="tooltip" title="Next scheduled repayment date">Next Due: {{ $nextDue ? $nextDue->next_due_date : '-' }}</span>
+                                            @if($nextDue && $nextDue->isOverdue())
+                                                <span class="badge bg-danger">Overdue</span>
+                                            @endif
+                                        </div>
+                                    </td>
                                     <td>
                                         <span class="badge bg-{{ $p->status === 'paid' ? 'success' : ($p->status === 'approved' ? 'primary' : 'secondary') }}">{{ ucfirst($p->status) }}</span>
                                     </td>

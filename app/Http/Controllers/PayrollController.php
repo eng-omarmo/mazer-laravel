@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdvanceTransaction;
 use App\Models\Employee;
+use App\Models\EmployeeAdvance;
 use App\Models\Payroll;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -111,11 +114,17 @@ class PayrollController extends Controller
 
     public function markPaid(Payroll $payroll)
     {
+        $repayment = $this->applyAdvanceRepayments($payroll);
         $payroll->update([
+            'advance_deduction' => $repayment['total'],
             'status' => 'paid',
             'paid_by' => Auth::id(),
             'paid_at' => now(),
         ]);
+        if ($repayment['total'] > 0) {
+            $wallet = Wallet::main();
+            $wallet->update(['balance' => $wallet->balance + $repayment['total']]);
+        }
         if ($payroll->batch_id) {
             $batch = $payroll->batch;
             if ($batch) {
@@ -128,6 +137,59 @@ class PayrollController extends Controller
         }
 
         return back()->with('status', 'Payroll marked as paid');
+    }
+
+    private function applyAdvanceRepayments(Payroll $payroll): array
+    {
+        $employeeId = $payroll->employee_id;
+        $available = max(0, (float) $payroll->net_pay);
+        $totalDeducted = 0.0;
+        $details = [];
+        if (! $employeeId || $available <= 0) {
+            return ['total' => 0.0, 'details' => []];
+        }
+        $advances = EmployeeAdvance::where('employee_id', $employeeId)
+            ->whereIn('status', ['approved'])
+            ->orderBy('date')
+            ->get();
+        foreach ($advances as $adv) {
+            if ($available <= 0) {
+                break;
+            }
+            $remaining = (float) ($adv->remaining_balance ?: $adv->amount);
+            if ($remaining <= 0) {
+                if ($adv->status !== 'paid') {
+                    $adv->update(['status' => 'paid']);
+                }
+
+                continue;
+            }
+            $installment = (float) ($adv->installment_amount ?: $remaining);
+            $deduct = min($installment, $remaining, $available);
+            if ($deduct <= 0) {
+                continue;
+            }
+            $totalDeducted += $deduct;
+            $available -= $deduct;
+            $newRemaining = max(0.0, $remaining - $deduct);
+            $adv->update(['remaining_balance' => $newRemaining]);
+            AdvanceTransaction::create([
+                'advance_id' => $adv->id,
+                'type' => 'repayment',
+                'amount' => $deduct,
+                'reference_type' => 'payroll',
+                'reference_id' => $payroll->id,
+                'created_by' => Auth::id(),
+            ]);
+            if ($newRemaining <= 0 && $adv->status !== 'paid') {
+                $adv->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => 0, 'fully_repaid' => true];
+            } else {
+                $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => $newRemaining, 'fully_repaid' => false];
+            }
+        }
+
+        return ['total' => round($totalDeducted, 2), 'details' => $details];
     }
 
     private function recalcBatchTotals(Payroll $payroll)

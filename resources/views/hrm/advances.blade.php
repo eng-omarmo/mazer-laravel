@@ -62,6 +62,8 @@
                                 <th>Date</th>
                                 <th>Employee</th>
                                 <th>Amount</th>
+                                <th>Remaining</th>
+                                <th>Installment</th>
                                 <th>Reason</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -73,6 +75,8 @@
                                     <td>{{ $a->date }}</td>
                                     <td>{{ $a->employee->first_name }} {{ $a->employee->last_name }}</td>
                                     <td>{{ number_format($a->amount,2) }}</td>
+                                    <td>{{ number_format($a->remaining_balance ?? $a->amount,2) }}</td>
+                                    <td>{{ $a->installment_amount ? number_format($a->installment_amount,2) : '-' }}</td>
                                     <td>{{ $a->reason }}</td>
                                     <td><span class="badge bg-{{ $a->status==='paid'?'success':($a->status==='approved'?'primary':'secondary') }}">{{ ucfirst($a->status) }}</span></td>
                                     <td class="d-flex gap-1">
@@ -89,7 +93,8 @@
                                                     <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-cash"></i> Mark Paid</button>
                                                 </form>
                                             @endif
-                                 
+                                   
+                                        <a href="{{ route('hrm.advances.show', $a) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i> Details</a>
                                     </td>
                                 </tr>
                             @empty

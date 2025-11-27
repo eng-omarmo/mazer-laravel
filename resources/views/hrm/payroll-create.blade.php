@@ -48,7 +48,7 @@
                             @error('basic_salary')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Allowances</label>
+                            <label class="form-label">Commission</label>
                             <input type="number" step="0.01" name="allowances" class="form-control" value="{{ old('allowances',0) }}">
                             @error('allowances')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>

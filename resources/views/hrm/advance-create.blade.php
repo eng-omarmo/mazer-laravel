@@ -48,6 +48,23 @@
                         <label class="form-label">Reason</label>
                         <input type="text" name="reason" class="form-control" placeholder="Optional notes">
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Installment Amount</label>
+                        <input type="number" step="0.01" name="installment_amount" class="form-control" placeholder="Optional">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Next Due Date</label>
+                        <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Schedule</label>
+                        <select name="schedule_type" class="form-select">
+                            <option value="none">None</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Biweekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
                     <div class="col-12">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
                     </div>
@@ -57,4 +74,3 @@
     </section>
 </div>
 @endsection
-

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdvanceTransaction;
 use App\Models\Employee;
+use App\Models\EmployeeAdvance;
 use App\Models\Payroll;
 use App\Models\PayrollBatch;
 use App\Models\Wallet;
@@ -179,14 +181,79 @@ class PayrollBatchController extends Controller
         if ($batch->status !== 'approved') {
             return back()->withErrors(['status' => 'Only approved batches can be paid']);
         }
+        $walletCredit = 0.0;
         foreach ($batch->payrolls as $p) {
             if ($p->status !== 'paid') {
-                $p->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                $repayment = $this->applyAdvanceRepayments($p);
+                $p->update([
+                    'advance_deduction' => $repayment['total'],
+                    'status' => 'paid',
+                    'paid_by' => Auth::id(),
+                    'paid_at' => now(),
+                ]);
+                $walletCredit += $repayment['total'];
             }
+        }
+        if ($walletCredit > 0) {
+            $wallet = Wallet::main();
+            $wallet->update(['balance' => $wallet->balance + $walletCredit]);
         }
         $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
 
         return back()->with('status', 'Batch marked as paid');
+    }
+
+    private function applyAdvanceRepayments(Payroll $payroll): array
+    {
+        $employeeId = $payroll->employee_id;
+        $available = max(0, (float) $payroll->net_pay);
+        $totalDeducted = 0.0;
+        $details = [];
+        if (! $employeeId || $available <= 0) {
+            return ['total' => 0.0, 'details' => []];
+        }
+        $advances = EmployeeAdvance::where('employee_id', $employeeId)
+            ->whereIn('status', ['approved'])
+            ->orderBy('date')
+            ->get();
+        foreach ($advances as $adv) {
+            if ($available <= 0) {
+                break;
+            }
+            $remaining = (float) ($adv->remaining_balance ?: $adv->amount);
+            if ($remaining <= 0) {
+                if ($adv->status !== 'paid') {
+                    $adv->update(['status' => 'paid']);
+                }
+
+                continue;
+            }
+            $installment = (float) ($adv->installment_amount ?: $remaining);
+            $deduct = min($installment, $remaining, $available);
+            if ($deduct <= 0) {
+                continue;
+            }
+            $totalDeducted += $deduct;
+            $available -= $deduct;
+            $newRemaining = max(0.0, $remaining - $deduct);
+            $adv->update(['remaining_balance' => $newRemaining]);
+            AdvanceTransaction::create([
+                'advance_id' => $adv->id,
+                'type' => 'repayment',
+                'amount' => $deduct,
+                'reference_type' => 'payroll',
+                'reference_id' => $payroll->id,
+                'created_by' => Auth::id(),
+            ]);
+            if ($newRemaining <= 0 && $adv->status !== 'paid') {
+                $adv->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => 0, 'fully_repaid' => true];
+            } else {
+                $details[] = ['advance_id' => $adv->id, 'deducted' => $deduct, 'remaining' => $newRemaining, 'fully_repaid' => false];
+            }
+        }
+
+        return ['total' => round($totalDeducted, 2), 'details' => $details];
     }
 
     public function approveAllPending(Request $request)
@@ -223,7 +290,7 @@ class PayrollBatchController extends Controller
 
         // validate date and year then add that to query
         $request->validate([
-            'year' => 'required|integer|min:2020|max:' . date('Y'),
+            'year' => 'required|integer|min:2020|max:'.date('Y'),
             'month' => 'required|integer|min:1|max:12',
         ]);
         // $this->authorizeRole(['Finance', 'Admin']);
@@ -235,10 +302,22 @@ class PayrollBatchController extends Controller
             ->get();
         $paid = 0;
         foreach ($approvedBatches as $batch) {
+            $walletCreditBatch = 0.0;
             foreach ($batch->payrolls as $p) {
                 if ($p->status !== 'paid') {
-                    $p->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
+                    $repayment = $this->applyAdvanceRepayments($p);
+                    $p->update([
+                        'advance_deduction' => $repayment['total'],
+                        'status' => 'paid',
+                        'paid_by' => Auth::id(),
+                        'paid_at' => now(),
+                    ]);
+                    $walletCreditBatch += $repayment['total'];
                 }
+            }
+            if ($walletCreditBatch > 0) {
+                $wallet = Wallet::main();
+                $wallet->update(['balance' => $wallet->balance + $walletCreditBatch]);
             }
 
             if ($batch->status !== 'paid') {

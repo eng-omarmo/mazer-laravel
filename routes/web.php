@@ -77,6 +77,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/advances', [\App\Http\Controllers\EmployeeAdvanceController::class, 'store'])->name('advances.store');
         Route::post('/advances/{advance}/approve', [\App\Http\Controllers\EmployeeAdvanceController::class, 'approve'])->name('advances.approve');
         Route::post('/advances/{advance}/paid', [\App\Http\Controllers\EmployeeAdvanceController::class, 'markPaid'])->name('advances.paid');
+        Route::get('/advances/{advance}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'show'])->name('advances.show');
+        Route::post('/advances/{advance}/repay', [\App\Http\Controllers\EmployeeAdvanceController::class, 'repay'])->name('advances.repay');
+        Route::get('/advances/receipt/{transaction}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'receipt'])->name('advances.receipt');
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');
@@ -99,6 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/leaves.csv', [HrmReportsController::class, 'leavesCsv'])->name('reports.leaves.csv');
         Route::get('/reports/attendance', [HrmReportsController::class, 'attendance'])->name('reports.attendance');
         Route::get('/reports/payroll', [HrmReportsController::class, 'payroll'])->name('reports.payroll');
+        Route::get('/reports/advances', [\App\Http\Controllers\ReportsController::class, 'advances'])->name('reports.advances');
     });
 });
 
