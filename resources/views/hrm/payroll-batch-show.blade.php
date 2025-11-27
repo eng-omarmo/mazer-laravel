@@ -112,12 +112,15 @@
                             </form>
                         @endif
                         @if($batch->status === 'approved')
-                            <form method="post" action="{{ route('hrm.payroll.batches.paid', $batch) }}">
+                            <form method="post" action="{{ route('hrm.payroll.batches.paidAll') }}">
                                 @csrf
+                                <input type="hidden" name="batch_id" value="{{ $batch->id }}">
+                                <input type="hidden" name="year" value="{{ $batch->year }}">
+                                <input type="hidden" name="month" value="{{ $batch->month }}">
                                 <button type="submit" class="btn btn-outline-success"><i class="bi bi-cash"></i> Mark Batch Paid</button>
                             </form>
                         @endif
-               
+
                 </div>
             </div>
         </div>

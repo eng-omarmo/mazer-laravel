@@ -32,20 +32,6 @@
                         <i class="bi bi-upload"></i> Post Payroll
                     </a>
 
-                    <form method="post" action="{{ route('hrm.payroll.batches.approveAll') }}">
-                        @csrf
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check2-all"></i> Approve All Pending
-                        </button>
-                    </form>
-
-                    <form method="post" action="{{ route('hrm.payroll.batches.paidAll') }}">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-success">
-                            <i class="bi bi-cash-coin"></i> Mark Paid All Approved
-                        </button>
-                    </form>
-
                     <!-- Filter Form -->
                     <form class="row g-2 ms-auto" method="get" action="{{ route('hrm.payroll.batches.index') }}">
                         <div class="col-auto">

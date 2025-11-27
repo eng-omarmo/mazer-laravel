@@ -76,6 +76,17 @@
                 </ul>
             </li>
 
+            <li class="sidebar-item has-sub {{ request()->is('hrm/advances*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-cash"></i>
+                    <span>Advances</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('hrm.advances.index') ? 'active' : '' }}"><a href="{{ route('hrm.advances.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.advances.create') ? 'active' : '' }}"><a href="{{ route('hrm.advances.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                </ul>
+            </li>
+
             <li class="sidebar-item {{ request()->routeIs('hrm.wallet.*') ? 'active' : '' }}">
                 <a href="{{ route('hrm.wallet.index') }}" class="sidebar-link">
                     <i class="bi bi-wallet2"></i>

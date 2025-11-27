@@ -195,7 +195,8 @@ class PayrollBatchController extends Controller
         $wallet = Wallet::main();
         $approved = 0;
         $skipped = 0;
-        $submittedBatches = PayrollBatch::where('status', 'submitted')->orderByDesc('year')->orderByDesc('month')->get();
+        $submittedBatches = PayrollBatch::where('status', 'draft')->orderByDesc('year')->orderByDesc('month')->get();
+
         foreach ($submittedBatches as $batch) {
             $amount = (float) ($batch->total_amount ?? 0);
             if ($wallet->balance >= $amount) {
@@ -219,8 +220,19 @@ class PayrollBatchController extends Controller
 
     public function markPaidAllApproved(Request $request)
     {
+
+        // validate date and year then add that to query
+        $request->validate([
+            'year' => 'required|integer|min:2020|max:'.date('Y'),
+            'month' => 'required|integer|min:1|max:12',
+        ]);
         // $this->authorizeRole(['Finance', 'Admin']);
-        $approvedBatches = PayrollBatch::where('status', 'approved')->orderByDesc('year')->orderByDesc('month')->get();
+        $approvedBatches = PayrollBatch::where('status', 'approved')
+            ->where('year', $request->year)
+            ->where('month', $request->month)
+            ->orderByDesc('year')
+            ->orderByDesc('month')
+            ->get();
         $paid = 0;
         foreach ($approvedBatches as $batch) {
             foreach ($batch->payrolls as $p) {
@@ -228,6 +240,7 @@ class PayrollBatchController extends Controller
                     $p->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
                 }
             }
+
             if ($batch->status !== 'paid') {
                 $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
                 $paid++;

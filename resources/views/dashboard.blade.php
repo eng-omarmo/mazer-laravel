@@ -37,6 +37,9 @@
                     $batch = \App\Models\PayrollBatch::where('year',$curYear)->where('month',$curMonth)->first();
                     $batchTotal = $batch?->total_amount ?? 0;
                     $batchStatus = $batch?->status ?? 'none';
+                    $wallet = \App\Models\Wallet::main();
+                    $walletBalance = $wallet->balance;
+                    $walletCurrency = $wallet->currency;
                 @endphp
 
                 <div class="row">
@@ -57,6 +60,9 @@
                     </div>
                     <div class="col-6 col-lg-2 col-md-4">
                         <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon secondary"><i class="bi bi-clipboard-check"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Batch Status</h6><h6 class="font-extrabold mb-0">{{ ucfirst($batchStatus) }}</h6></div></div></div></div>
+                    </div>
+                    <div class="col-6 col-lg-2 col-md-4">
+                        <div class="card"><div class="card-body px-3 py-4-5"><div class="row"><div class="col-md-4"><div class="stats-icon info"><i class="bi bi-wallet2"></i></div></div><div class="col-md-8"><h6 class="text-muted font-semibold">Account Balance</h6><h6 class="font-extrabold mb-0">{{ number_format($walletBalance,2) }} {{ $walletCurrency }}</h6></div></div></div></div>
                     </div>
                 </div>
 

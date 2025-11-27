@@ -72,6 +72,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/attendance/export/csv', [AttendanceController::class, 'exportCsv'])->name('attendance.export.csv');
         Route::get('/attendance/my', [AttendanceController::class, 'myHistory'])->name('attendance.my');
 
+        Route::get('/advances', [\App\Http\Controllers\EmployeeAdvanceController::class, 'index'])->name('advances.index');
+        Route::get('/advances/create', [\App\Http\Controllers\EmployeeAdvanceController::class, 'create'])->name('advances.create');
+        Route::post('/advances', [\App\Http\Controllers\EmployeeAdvanceController::class, 'store'])->name('advances.store');
+        Route::post('/advances/{advance}/approve', [\App\Http\Controllers\EmployeeAdvanceController::class, 'approve'])->name('advances.approve');
+        Route::post('/advances/{advance}/paid', [\App\Http\Controllers\EmployeeAdvanceController::class, 'markPaid'])->name('advances.paid');
+
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');
         Route::post('/payroll/batches', [PayrollBatchController::class, 'store'])->name('payroll.batches.store');
