@@ -52,7 +52,7 @@
                     </div>
                 </form>
                 @if(request('employee_id'))
-                @php $emp = optional(optional($advances->first())->employee); $remTotal = \App\Models\EmployeeAdvance::whereIn('status',["approved"]).where('employee_id', request('employee_id'))->sum('remaining_balance'); @endphp
+                @php $emp = optional(optional($advances->first())->employee); $remTotal = \App\Models\EmployeeAdvance::whereIn('status',["paid"])->where('employee_id', request('employee_id'))->sum('remaining_balance'); @endphp
                 <div class="row mb-2">
                     <div class="col-md-4"><strong>Employee:</strong> {{ $emp->first_name }} {{ $emp->last_name }}</div>
                     <div class="col-md-4"><strong>Email:</strong> {{ $emp->email }}</div>
