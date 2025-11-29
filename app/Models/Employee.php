@@ -23,6 +23,7 @@ class Employee extends Model
         'position',
         'hire_date',
         'status',
+        'account_number',
     ];
 
     public function documents()

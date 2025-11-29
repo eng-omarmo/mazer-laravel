@@ -10,6 +10,7 @@ use App\Models\EmployeeLeave;
 use App\Models\Payroll;
 use App\Models\PayrollBatch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HrmReportsController extends Controller
@@ -24,7 +25,7 @@ class HrmReportsController extends Controller
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('q')) {
-            $needle = '%'.$request->string('q').'%';
+            $needle = '%' . $request->string('q') . '%';
             $query->where(function ($q) use ($needle) {
                 $q->where('first_name', 'like', $needle)->orWhere('last_name', 'like', $needle);
             });
@@ -58,7 +59,7 @@ class HrmReportsController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Name', 'Department', 'Status']);
             foreach ($rows as $e) {
-                fputcsv($out, [$e->first_name.' '.$e->last_name, optional($e->department)->name, $e->status]);
+                fputcsv($out, [$e->first_name . ' ' . $e->last_name, optional($e->department)->name, $e->status]);
             }
             fclose($out);
         });
@@ -75,7 +76,7 @@ class HrmReportsController extends Controller
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('type')) {
-            $query->where('type', 'like', '%'.$request->string('type').'%');
+            $query->where('type', 'like', '%' . $request->string('type') . '%');
         }
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->integer('employee_id'));
@@ -111,7 +112,7 @@ class HrmReportsController extends Controller
             fputcsv($out, ['Employee', 'Type', 'Status', 'Start', 'End', 'Days']);
             foreach ($rows as $l) {
                 $days = $l->start_date && $l->end_date ? $l->end_date->diffInDays($l->start_date) : '';
-                fputcsv($out, [optional($l->employee)->first_name.' '.optional($l->employee)->last_name, $l->type, $l->status, $l->start_date, $l->end_date, $days]);
+                fputcsv($out, [optional($l->employee)->first_name . ' ' . optional($l->employee)->last_name, $l->type, $l->status, $l->start_date, $l->end_date, $days]);
             }
             fclose($out);
         });
@@ -177,10 +178,17 @@ class HrmReportsController extends Controller
         $batchesTotal = PayrollBatch::count();
         $batchesPaid = PayrollBatch::where('status', 'paid')->count();
         $paymentCompletionRate = $batchesTotal > 0 ? round($batchesPaid / $batchesTotal * 100, 2) : 0;
-        $approvalVelocities = PayrollBatch::whereNotNull('submitted_at')->whereNotNull('approved_at')->get()->map(function ($b) {
-            return $b->approved_at->diffInHours($b->submitted_at);
-        });
-        $avgApprovalHours = $approvalVelocities->count() ? round($approvalVelocities->avg(), 2) : 0;
+        $approvalVelocities = PayrollBatch::whereNotNull('submitted_at')
+            ->whereNotNull('approved_at')
+            ->get()
+            ->map(function ($b) {
+                return Carbon::parse($b->approved_at)
+                    ->diffInHours(Carbon::parse($b->submitted_at));
+            });
+
+        $avgApprovalHours = $approvalVelocities->count()
+            ? round($approvalVelocities->avg(), 2)
+            : 0;
 
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
 

@@ -68,7 +68,7 @@
                                             $basic = $e->salary ?? 0;
                                             $bonus = $e->bonus ?? 0;
                                             $advances = \App\Models\EmployeeAdvance::where('employee_id', $e->id)
-                                                ->whereIn('status', ['approved'])
+                                                ->whereIn('status', ['paid'])
                                                 ->orderBy('date')
                                                 ->get();
                                             $remainingTotal = $advances->sum(function($a){ return (float) ($a->remaining_balance ?? $a->amount); });
@@ -89,7 +89,7 @@
                                                 <span class="line-net">{{ number_format(($basic + $bonus),2) }}</span>
                                             </td>
                                         <td>
-                                                <input type="number" step="0.01" name="lines[{{ $e->id }}][advance_deduction]" value="{{ number_format(min($sumInstallments, $remainingTotal, ($basic + $bonus)),2) }}" class="form-control line-adv-input">
+                                                <input type="number" step="0.01" min="0" name="lines[{{ $e->id }}][advance_deduction]" value="{{ old('lines.'.$e->id.'.advance_deduction', round(min($sumInstallments, $remainingTotal, ($basic + $bonus)), 2)) }}" class="form-control line-adv-input">
                                             </td>
                                             <td>
                                                 <strong class="line-netpaid">{{ number_format((($basic + $bonus) - min($sumInstallments, $remainingTotal, ($basic + $bonus))),2) }}</strong>
@@ -107,16 +107,27 @@
                                 const allow = parseFloat(row.querySelector('.line-allow').value||'0');
                                 const deduct = parseFloat(row.querySelector('.line-deduct').value||'0');
                                 const net = basic + allow - deduct;
-                                const installments = parseFloat(row.dataset.installments||'0');
                                 const remaining = parseFloat(row.dataset.remaining||'0');
                                 const input = row.querySelector('.line-adv-input');
-                                const maxAdv = Math.max(0, Math.min(installments, remaining, net));
-                                let inputVal = parseFloat(input.value||'0');
-                                if (isNaN(inputVal) || inputVal < 0) inputVal = 0;
-                                if (inputVal > maxAdv) inputVal = maxAdv;
-                                input.value = inputVal.toFixed(2);
+                                let inputVal = parseFloat(input.value);
+                                if (isNaN(inputVal)) inputVal = 0;
+                                const exceeds = inputVal > remaining;
+                                let feedback = row.querySelector('.adv-feedback');
+                                if (exceeds) {
+                                    input.classList.add('is-invalid');
+                                    if (!feedback) {
+                                        feedback = document.createElement('div');
+                                        feedback.className = 'invalid-feedback adv-feedback';
+                                        input.closest('td').appendChild(feedback);
+                                    }
+                                    feedback.textContent = `Exceeds remaining balance. Max: ${remaining.toFixed(2)}`;
+                                } else {
+                                    input.classList.remove('is-invalid');
+                                    if (feedback) feedback.remove();
+                                }
                                 row.querySelector('.line-net').textContent = net.toFixed(2);
-                                row.querySelector('.line-netpaid').textContent = (net - inputVal).toFixed(2);
+                                const netPaid = net - Math.min(inputVal, net);
+                                row.querySelector('.line-netpaid').textContent = netPaid.toFixed(2);
                             }
                             rows.forEach(row=>{
                                 ['.line-basic','.line-allow','.line-deduct'].forEach(sel=>{

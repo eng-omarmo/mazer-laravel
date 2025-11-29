@@ -57,6 +57,11 @@
                             <input type="number" step="0.01" name="deductions" class="form-control" value="{{ old('deductions',0) }}">
                             @error('deductions')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Advance Deduction</label>
+                            <input type="number" step="0.01" name="advance_deduction" class="form-control" value="{{ old('advance_deduction',0) }}">
+                            @error('advance_deduction')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
                     </div>
                     <div class="mt-3">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>

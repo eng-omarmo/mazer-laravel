@@ -35,10 +35,30 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Employee</label>
+                        <select name="employee_id" class="form-select">
+                            <option value="">All</option>
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->id }}" {{ (string)request('employee_id')===(string)$emp->id?'selected':'' }}>{{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->email }})</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-auto align-self-end">
                         <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
                     </div>
+                    <div class="col-auto align-self-end">
+                        <a class="btn btn-outline-primary" href="{{ route('hrm.reports.advances.csv', request()->query()) }}"><i class="bi bi-download"></i> Export CSV</a>
+                    </div>
                 </form>
+                @if(request('employee_id'))
+                @php $emp = optional(optional($advances->first())->employee); $remTotal = \App\Models\EmployeeAdvance::whereIn('status',["approved"]).where('employee_id', request('employee_id'))->sum('remaining_balance'); @endphp
+                <div class="row mb-2">
+                    <div class="col-md-4"><strong>Employee:</strong> {{ $emp->first_name }} {{ $emp->last_name }}</div>
+                    <div class="col-md-4"><strong>Email:</strong> {{ $emp->email }}</div>
+                    <div class="col-md-4"><strong>Remaining Total:</strong> {{ number_format($remTotal,2) }}</div>
+                </div>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -65,10 +85,9 @@
                         </tbody>
                     </table>
                 </div>
-                {{ $advances->links() }}
+                {{ $advances->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </section>
 </div>
 @endsection
-

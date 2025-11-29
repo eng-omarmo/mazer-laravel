@@ -44,6 +44,7 @@ class EmployeeController extends Controller
             'cv' => ['required', 'file', 'mimes:pdf,doc,docx'],
             'contract' => ['required', 'file', 'mimes:pdf,doc,docx'],
             'identity_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
+            'account_number' => ['nullable', 'string', 'max:100'],
         ]);
 
         $employee = Employee::create([
@@ -60,6 +61,7 @@ class EmployeeController extends Controller
             'position' => $validated['position'] ?? null,
             'hire_date' => $validated['hire_date'] ?? null,
             'status' => 'active',
+            'account_number' => $validated['account_number'] ?? null,
         ]);
 
         $uploaderId = Auth::id();

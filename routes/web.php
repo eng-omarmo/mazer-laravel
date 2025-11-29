@@ -103,6 +103,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/attendance', [HrmReportsController::class, 'attendance'])->name('reports.attendance');
         Route::get('/reports/payroll', [HrmReportsController::class, 'payroll'])->name('reports.payroll');
         Route::get('/reports/advances', [\App\Http\Controllers\ReportsController::class, 'advances'])->name('reports.advances');
+        Route::get('/reports/advances.csv', [\App\Http\Controllers\ReportsController::class, 'advancesCsv'])->name('reports.advances.csv');
     });
 });
 

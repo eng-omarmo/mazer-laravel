@@ -62,16 +62,17 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-3 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Changes</button>
-                        @if($batch->status === 'draft')
-                        <form method="post" action="{{ route('hrm.payroll.batches.submit', $batch) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-send"></i> Submit</button>
-                        </form>
-                        @endif
-                    </div>
                 </form>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Changes</button>
+                    @if($batch->status === 'draft')
+                    <form method="post" action="{{ route('hrm.payroll.batches.submit', $batch) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-send"></i> Submit</button>
+                    </form>
+                    @endif
+                </div>
+
                 @else
                 <div class="table-responsive">
                     <table class="table table-striped">
@@ -81,10 +82,10 @@
                                 <th>Basic</th>
                                 <th>Commissions</th>
                                 <th>Deductions</th>
-                                    <th>Net</th>
-                                    <th>Advance Deduction</th>
-                                    <th>Net Paid</th>
-                                    <th>Advance Deduction Repayment</th>
+                                <th>Net</th>
+                                <th>Advance Deduction</th>
+                                <th>Net Paid</th>
+                                <th>Advance Deduction Repayment</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -94,32 +95,32 @@
                                 <td>{{ number_format($p->basic_salary,2) }}</td>
                                 <td>{{ number_format($p->allowances,2) }}</td>
                                 <td>{{ number_format($p->deductions,2) }}</td>
-                                        <td><strong>{{ number_format($p->net_pay,2) }}</strong></td>
-                                        <td>{{ number_format($p->advance_deduction ?? 0,2) }}</td>
-                                        <td><strong>{{ number_format(($p->net_pay - ($p->advance_deduction ?? 0)),2) }}</strong></td>
-                                        <td>
-                                            @php
-                                                $advances = \App\Models\EmployeeAdvance::where('employee_id',$p->employee_id)->whereIn('status',['approved'])->orderBy('date')->get();
-                                                $remaining = $advances->sum(fn($a) => (float)($a->remaining_balance ?? $a->amount));
-                                                $nextDue = $advances->filter(fn($a) => $a->next_due_date)->sortBy('next_due_date')->first();
-                                            @endphp
-                                            <div>
-                                                <span data-bs-toggle="tooltip" title="Original deduction from this payroll">Deducted: {{ number_format($p->advance_deduction ?? 0,2) }}</span>
-                                            </div>
-                                            <div>
-                                                <span data-bs-toggle="tooltip" title="Current repayment status">Status: {{ $remaining>0?'In Progress':'Settled' }}</span>
-                                            </div>
-                                            <div>
-                                                <span data-bs-toggle="tooltip" title="Remaining total across advances">Remaining: {{ number_format($remaining,2) }}</span>
-                                            </div>
-        
-                                            <div>
-                                                <span data-bs-toggle="tooltip" title="Next scheduled repayment date">Next Due: {{ $nextDue ? $nextDue->next_due_date : '-' }}</span>
-                                                @if($nextDue && $nextDue->isOverdue())
-                                                    <span class="badge bg-danger">Overdue</span>
-                                                @endif
-                                            </div>
-                                        </td>
+                                <td><strong>{{ number_format($p->net_pay,2) }}</strong></td>
+                                <td>{{ number_format($p->advance_deduction ?? 0,2) }}</td>
+                                <td><strong>{{ number_format(($p->net_pay - ($p->advance_deduction ?? 0)),2) }}</strong></td>
+                                <td>
+                                    @php
+                                    $advances = \App\Models\EmployeeAdvance::where('employee_id',$p->employee_id)->whereIn('status',['approved'])->orderBy('date')->get();
+                                    $remaining = $advances->sum(fn($a) => (float)($a->remaining_balance ?? $a->amount));
+                                    $nextDue = $advances->filter(fn($a) => $a->next_due_date)->sortBy('next_due_date')->first();
+                                    @endphp
+                                    <div>
+                                        <span data-bs-toggle="tooltip" title="Original deduction from this payroll">Deducted: {{ number_format($p->advance_deduction ?? 0,2) }}</span>
+                                    </div>
+                                    <div>
+                                        <span data-bs-toggle="tooltip" title="Current repayment status">Status: {{ $remaining>0?'In Progress':'Settled' }}</span>
+                                    </div>
+                                    <div>
+                                        <span data-bs-toggle="tooltip" title="Remaining total across advances">Remaining: {{ number_format($remaining,2) }}</span>
+                                    </div>
+
+                                    <div>
+                                        <span data-bs-toggle="tooltip" title="Next scheduled repayment date">Next Due: {{ $nextDue ? $nextDue->next_due_date : '-' }}</span>
+                                        @if($nextDue && $nextDue->isOverdue())
+                                        <span class="badge bg-danger">Overdue</span>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>

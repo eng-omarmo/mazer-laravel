@@ -117,7 +117,7 @@
                     </table>
                 </div>
 
-                {{ $employees->links() }}
+           {{ $employees->onEachSide(1)->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </section>
