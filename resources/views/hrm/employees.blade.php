@@ -37,6 +37,7 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Department</th>
+                                <th>Organization</th>
                                 <th>Salary</th>
                                 <th>Bonus</th>
                                 <th>Position</th>
@@ -56,6 +57,7 @@
                                     <td>{{ $emp->first_name }} {{ $emp->last_name }}</td>
                                     <td>{{ $emp->email }}</td>
                                     <td>{{ optional($emp->department)->code }} {{ optional($emp->department) ? '-' : '' }} {{ optional($emp->department)->name }}</td>
+                                    <td>{{ optional($emp->organization)->name  ?? '-' }}</td>
                                     <td>{{ $emp->salary !== null ? number_format($emp->salary,2) : '-' }}</td>
                                     <td>{{ $emp->bonus !== null ? number_format($emp->bonus,2) : '-' }}</td>
                                     <td>{{ $emp->position }}</td>

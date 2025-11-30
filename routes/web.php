@@ -17,6 +17,13 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    $role = strtolower($user->role ?? 'hrm');
+    if (in_array($role, ['hrm', 'admin'])) {
+        if (\App\Models\PayrollBatch::where('status', 'submitted')->exists()) {
+            session()->flash('status', 'Payroll approval waiting');
+        }
+    }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 

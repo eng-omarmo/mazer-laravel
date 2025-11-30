@@ -70,6 +70,14 @@
                         <strong><i class="bi bi-calendar-event-fill"></i> Hire Date:</strong>
                         <div>{{ $employee->hire_date }}</div>
                     </div>
+                       <div class="col-md-6">
+                        <strong>Organization:</strong>
+                        <div>{{ optional($employee->organization)->name ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Account Number:</strong>
+                        <div>{{ $employee->account_number ?? '-' }}</div>
+                    </div>
                 </div>
 
                 <hr class="my-4">
@@ -109,6 +117,8 @@
                         <strong>Fingerprint ID:</strong>
                         <div>{{ $employee->fingerprint_id ?? '-' }}</div>
                     </div>
+
+
                 </div>
 
                 <hr class="my-4">
