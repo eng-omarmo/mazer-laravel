@@ -74,6 +74,7 @@
                     </div>
                     <div class="mt-3 d-flex gap-2">
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Changes</button>
+                           </form>
                         @if($batch->status === 'draft')
                         <form method="post" action="{{ route('hrm.payroll.batches.submit', $batch) }}">
                             @csrf
@@ -81,7 +82,7 @@
                         </form>
                         @endif
                     </div>
-                </form>
+
 
                 <script>
                 document.addEventListener('DOMContentLoaded', function(){

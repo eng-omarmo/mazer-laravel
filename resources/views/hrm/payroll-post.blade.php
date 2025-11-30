@@ -22,10 +22,10 @@
         <div class="card">
             <div class="card-body">
                 @if (session('status'))
-                    <div class="alert alert-success">{{ session('status') }}</div>
+                <div class="alert alert-success">{{ session('status') }}</div>
                 @endif
                 @if ($errors->any())
-                    <div class="alert alert-danger">{{ $errors->first() }}</div>
+                <div class="alert alert-danger">{{ $errors->first() }}</div>
                 @endif
 
                 <form method="get" action="{{ route('hrm.payroll.batches.create') }}" class="row g-3 align-items-end">
@@ -44,70 +44,75 @@
                 </form>
 
                 @if($preview)
-                    <hr>
-                    <form method="post" action="{{ route('hrm.payroll.batches.store') }}">
-                        @csrf
-                        <input type="hidden" name="year" value="{{ $year }}">
-                        <input type="hidden" name="month" value="{{ $month }}">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Employee</th>
-                                        <th>Basic Salary</th>
-                                        <th>Allowances</th>
-                                        <th>Deductions</th>
-                                        <th>Net</th>
-                                        <th>Advance Deduction</th>
-                                        <th>Net Paid</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($employees as $e)
-                                        @php
-                                            $basic = $e->salary ?? 0;
-                                            $bonus = $e->bonus ?? 0;
-                                            $advances = \App\Models\EmployeeAdvance::where('employee_id', $e->id)
-                                                ->whereIn('status', ['paid'])
-                                                ->orderBy('date')
-                                                ->get();
-                                            $remainingTotal = $advances->sum(function($a){ return (float) ($a->remaining_balance ?? $a->amount); });
-                                            $sumInstallments = $advances->sum(function($a){ $rem = (float) ($a->remaining_balance ?? $a->amount); $inst = (float) ($a->installment_amount ?? $rem); return min($inst, $rem); });
-                                        @endphp
-                                        <tr class="payroll-line" data-installments="{{ $sumInstallments }}" data-remaining="{{ $remainingTotal }}">
-                                            <td>{{ $e->first_name }} {{ $e->last_name }} ({{ $e->email }})</td>
-                                            <td>
-                                                <input type="number" step="0.01" name="lines[{{ $e->id }}][basic_salary]" value="{{ $basic }}" class="form-control line-basic">
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" name="lines[{{ $e->id }}][allowances]" value="{{ $bonus }}" class="form-control line-allow">
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" name="lines[{{ $e->id }}][deductions]" value="0" class="form-control line-deduct">
-                                            </td>
-                                            <td>
-                                                <span class="line-net">{{ number_format(($basic + $bonus),2) }}</span>
-                                            </td>
-                                        <td>
-                                                <input type="number" step="0.01" min="0" name="lines[{{ $e->id }}][advance_deduction]" value="{{ old('lines.'.$e->id.'.advance_deduction', round(min($sumInstallments, $remainingTotal, ($basic + $bonus)), 2)) }}" class="form-control line-adv-input">
-                                            </td>
-                                            <td>
-                                                <strong class="line-netpaid">{{ number_format((($basic + $bonus) - min($sumInstallments, $remainingTotal, ($basic + $bonus))),2) }}</strong>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <script>
-                        document.addEventListener('DOMContentLoaded', function(){
+                <hr>
+                <form method="post" action="{{ route('hrm.payroll.batches.store') }}">
+                    @csrf
+                    <input type="hidden" name="year" value="{{ $year }}">
+                    <input type="hidden" name="month" value="{{ $month }}">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee Info</th>
+                                    <th>Position</th>
+                                    <th>Basic Salary</th>
+                                    <th>Deductions</th>
+                                    <th>Advance Deduction</th>
+                                    <th>Net Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($employees as $e)
+                                @php
+                                $basic = $e->salary ?? 0;
+                                $bonus = $e->bonus ?? 0;
+                                $advances = \App\Models\EmployeeAdvance::where('employee_id', $e->id)
+                                ->whereIn('status', ['paid'])
+                                ->orderBy('date')
+                                ->get();
+                                $remainingTotal = $advances->sum(function($a){ return (float) ($a->remaining_balance ?? $a->amount); });
+                                $sumInstallments = $advances->sum(function($a){ $rem = (float) ($a->remaining_balance ?? $a->amount); $inst = (float) ($a->installment_amount ?? $rem); return min($inst, $rem); });
+                                @endphp
+                                <tr class="payroll-line" data-installments="{{ $sumInstallments }}" data-remaining="{{ $remainingTotal }}">
+                                    <td>
+                                        <div><strong>Name:</strong> {{ $e->first_name }} {{ $e->last_name }}</div>
+                                        <div><strong>Account:</strong> {{ $e->account_number }}</div>
+                                        <div><strong>Dept:</strong> {{ $e->department->name }}</div>
+                                        <div><strong>Org:</strong> {{ $e->organization->name ?? 'N/A' }}</div>
+                                    </td>
+                                    <td>
+                                        {{ $e->position ?? 'N/A' }}
+                                    </td>
+
+                                    <td>
+                                        <input type="number" step="0.01" name="lines[{{ $e->id }}][basic_salary]" value="{{ $basic }}" class="form-control line-basic">
+                                    </td>
+
+                                    <td>
+                                        <input type="number" step="0.01" name="lines[{{ $e->id }}][deductions]" value="0" class="form-control line-deduct">
+                                    </td>
+
+                                    <td>
+                                        <input type="number" step="0.01" min="0" name="lines[{{ $e->id }}][advance_deduction]" value="{{ old('lines.'.$e->id.'.advance_deduction', round(min($sumInstallments, $remainingTotal, ($basic + $bonus)), 2)) }}" class="form-control line-adv-input">
+                                    </td>
+                                    <td>
+                                        <strong class="line-netpaid">{{ number_format((($basic + $bonus) - min($sumInstallments, $remainingTotal, ($basic + $bonus))),2) }}</strong>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
                             const rows = document.querySelectorAll('.payroll-line');
-                            function recalc(row){
-                                const basic = parseFloat(row.querySelector('.line-basic').value||'0');
-                                const allow = parseFloat(row.querySelector('.line-allow').value||'0');
-                                const deduct = parseFloat(row.querySelector('.line-deduct').value||'0');
+
+                            function recalc(row) {
+                                const basic = parseFloat(row.querySelector('.line-basic').value || '0');
+                                const allow = 0;
+                                const deduct = parseFloat(row.querySelector('.line-deduct').value || '0');
                                 const net = basic + allow - deduct;
-                                const remaining = parseFloat(row.dataset.remaining||'0');
+                                const remaining = parseFloat(row.dataset.remaining || '0');
                                 const input = row.querySelector('.line-adv-input');
                                 let inputVal = parseFloat(input.value);
                                 if (isNaN(inputVal)) inputVal = 0;
@@ -129,21 +134,21 @@
                                 const netPaid = net - Math.min(inputVal, net);
                                 row.querySelector('.line-netpaid').textContent = netPaid.toFixed(2);
                             }
-                            rows.forEach(row=>{
-                                ['.line-basic','.line-allow','.line-deduct'].forEach(sel=>{
+                            rows.forEach(row => {
+                                ['.line-basic', '.line-allow', '.line-deduct'].forEach(sel => {
                                     const input = row.querySelector(sel);
-                                    input.addEventListener('input', ()=>recalc(row));
+                                    input.addEventListener('input', () => recalc(row));
                                 });
                                 const advInput = row.querySelector('.line-adv-input');
-                                advInput.addEventListener('input', ()=>recalc(row));
+                                advInput.addEventListener('input', () => recalc(row));
                                 recalc(row);
                             });
                         });
-                        </script>
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Post Payroll</button>
-                        </div>
-                    </form>
+                    </script>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Post Payroll</button>
+                    </div>
+                </form>
                 @endif
             </div>
         </div>

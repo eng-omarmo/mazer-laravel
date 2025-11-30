@@ -44,7 +44,8 @@ class PayrollBatchController extends Controller
 
     public function store(Request $request)
     {
-        //$this->authorizeRole(['HR', 'Admin']);
+
+        $this->authorizeRole(['finance', 'admin']);
         $validated = $request->validate([
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required', 'integer', 'min:1', 'max:12'],
@@ -85,7 +86,6 @@ class PayrollBatchController extends Controller
                 return min($inst, $rem);
             });
             $plannedAdv = isset($line['advance_deduction']) ? (float) $line['advance_deduction'] : 0.0;
-            $plannedAdv = max(0, min($plannedAdv, $sumInstallments, $remainingTotal, $net));
             Payroll::create([
                 'batch_id' => $batch->id,
                 'employee_id' => (int) $employeeId,
@@ -119,7 +119,7 @@ class PayrollBatchController extends Controller
 
     public function update(Request $request, PayrollBatch $batch)
     {
-      //  $this->authorizeRole(['HR', 'Admin']);
+        $this->authorizeRole(['finance', 'admin']);
         if ($batch->status === 'approved') {
             return back()->withErrors(['status' => 'Approved batches are locked']);
         }
@@ -167,9 +167,7 @@ class PayrollBatchController extends Controller
 
     public function submit(PayrollBatch $batch)
     {
-
-
-       // $this->authorizeRole(['HR', 'Admin']);
+        $this->authorizeRole(['finance', 'admin']);
         if ($batch->status !== 'draft') {
             return back()->withErrors(['status' => 'Only draft batches can be submitted']);
         }
@@ -180,7 +178,7 @@ class PayrollBatchController extends Controller
 
     public function approve(PayrollBatch $batch)
     {
-        // $this->authorizeRole(['Finance', 'Admin']);
+        $this->authorizeRole(['hrm', 'admin']);
         if ($batch->status !== 'submitted') {
             return back()->withErrors(['status' => 'Only submitted batches can be approved']);
         }
@@ -199,7 +197,7 @@ class PayrollBatchController extends Controller
 
     public function reject(PayrollBatch $batch)
     {
-       // $this->authorizeRole(['Finance', 'Admin']);
+        $this->authorizeRole(['hrm', 'admin']);
         if ($batch->status !== 'submitted') {
             return back()->withErrors(['status' => 'Only submitted batches can be rejected']);
         }
@@ -210,7 +208,7 @@ class PayrollBatchController extends Controller
 
     public function markPaid(PayrollBatch $batch)
     {
-       // $this->authorizeRole(['Finance', 'Admin']);
+        $this->authorizeRole(['finance', 'admin']);
         if ($batch->status !== 'approved') {
             return back()->withErrors(['status' => 'Only approved batches can be paid']);
         }
@@ -328,10 +326,10 @@ class PayrollBatchController extends Controller
 
         // validate date and year then add that to query
         $request->validate([
-            'year' => 'required|integer|min:2020|max:'.date('Y'),
+            'year' => 'required|integer|min:2020|max:' . date('Y'),
             'month' => 'required|integer|min:1|max:12',
         ]);
-        // $this->authorizeRole(['Finance', 'Admin']);
+        $this->authorizeRole(['finance', 'admin']);
         $approvedBatches = PayrollBatch::where('status', 'approved')
             ->where('year', $request->year)
             ->where('month', $request->month)
@@ -371,7 +369,9 @@ class PayrollBatchController extends Controller
     private function authorizeRole(array $roles)
     {
         $user = Auth::user();
-        if (! $user || ! in_array($user->role ?? 'HR', $roles)) {
+        $role = strtolower($user->role ?? 'hrm');
+        $allowed = array_map('strtolower', $roles);
+        if (! $user || ! in_array($role, $allowed)) {
             abort(403);
         }
     }

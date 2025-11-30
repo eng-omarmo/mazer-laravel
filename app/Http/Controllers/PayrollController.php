@@ -35,6 +35,7 @@ class PayrollController extends Controller
 
     public function create()
     {
+        $this->authorizeRole(['finance', 'admin']);
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
 
         return view('hrm.payroll-create', compact('employees'));
@@ -42,6 +43,7 @@ class PayrollController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeRole(['finance', 'admin']);
         $validated = $request->validate([
             'employee_id' => ['required', 'exists:employees,id'],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
@@ -65,6 +67,7 @@ class PayrollController extends Controller
 
     public function edit(Payroll $payroll)
     {
+        $this->authorizeRole(['finance', 'admin']);
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
 
         return view('hrm.payroll-edit', compact('payroll', 'employees'));
@@ -72,6 +75,7 @@ class PayrollController extends Controller
 
     public function update(Request $request, Payroll $payroll)
     {
+        $this->authorizeRole(['finance', 'admin']);
         $validated = $request->validate([
             'employee_id' => ['required', 'exists:employees,id'],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
@@ -81,6 +85,10 @@ class PayrollController extends Controller
             'deductions' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:draft,approved,paid'],
         ]);
+        $userRole = strtolower(Auth::user()->role ?? 'hrm');
+        if ($userRole !== 'admin') {
+            $validated['status'] = 'draft';
+        }
         $net = (float) $validated['basic_salary'] + (float) ($validated['allowances'] ?? 0) - (float) ($validated['deductions'] ?? 0);
         $payroll->update(array_merge($validated, ['net_pay' => $net]));
         $this->recalcBatchTotals($payroll);
@@ -90,6 +98,7 @@ class PayrollController extends Controller
 
     public function destroy(Payroll $payroll)
     {
+        $this->authorizeRole(['finance', 'admin']);
         $batchId = $payroll->batch_id;
         $payroll->delete();
         if ($batchId) {
@@ -103,6 +112,7 @@ class PayrollController extends Controller
 
     public function approve(Payroll $payroll)
     {
+        $this->authorizeRole(['hrm', 'admin']);
         $payroll->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
@@ -114,6 +124,7 @@ class PayrollController extends Controller
 
     public function markPaid(Payroll $payroll)
     {
+        $this->authorizeRole(['finance', 'admin']);
         $repayment = $this->applyAdvanceRepayments($payroll);
         $payroll->update([
             'advance_deduction' => $repayment['total'],
@@ -212,5 +223,15 @@ class PayrollController extends Controller
             'total_amount' => $totalAmount,
             'total_employees' => $totalEmployees,
         ]);
+    }
+
+    private function authorizeRole(array $roles)
+    {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? 'hrm');
+        $allowed = array_map('strtolower', $roles);
+        if (! $user || ! in_array($role, $allowed)) {
+            abort(403);
+        }
     }
 }

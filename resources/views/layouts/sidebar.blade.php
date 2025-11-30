@@ -137,6 +137,17 @@
 
             <li class="sidebar-title">Administration</li>
 
+            <li class="sidebar-item has-sub {{ request()->is('admin/users*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-gear"></i>
+                    <span>Users</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('admin.users.index') ? 'active' : '' }}"><a href="{{ route('admin.users.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    <li class="submenu-item {{ request()->routeIs('admin.users.create') ? 'active' : '' }}"><a href="{{ route('admin.users.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                </ul>
+            </li>
+
             <li class="sidebar-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                 <a href="{{ route('profile.edit') }}" class="sidebar-link">
                     <i class="bi bi-person-circle"></i>
