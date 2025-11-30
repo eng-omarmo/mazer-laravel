@@ -73,6 +73,16 @@
                             <input type="text" name="account_number" value="{{ old('account_number') }}" class="form-control">
                             @error('account_number')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Organization</label>
+                            <select name="organization_id" class="form-select">
+                                <option value="">None</option>
+                                @foreach($organizations as $org)
+                                    <option value="{{ $org->id }}" {{ (string)old('organization_id')===(string)$org->id?'selected':'' }}>{{ $org->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('organization_id')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
 
 
                     </div>

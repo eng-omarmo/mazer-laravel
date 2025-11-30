@@ -22,6 +22,17 @@
             </li>
             <li class="sidebar-title">HRM</li>
 
+                    <li class="sidebar-item has-sub {{ request()->is('hrm/organizations*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-building"></i>
+                    <span>Organizations</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('hrm.organizations.index') ? 'active' : '' }}"><a href="{{ route('hrm.organizations.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.organizations.create') ? 'active' : '' }}"><a href="{{ route('hrm.organizations.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                </ul>
+            </li>
+
             <li class="sidebar-item has-sub {{ request()->is('hrm/departments') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-diagram-3-fill"></i>
@@ -86,6 +97,8 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.advances.create') ? 'active' : '' }}"><a href="{{ route('hrm.advances.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
                 </ul>
             </li>
+
+
 
             <li class="sidebar-item {{ request()->routeIs('hrm.wallet.*') ? 'active' : '' }}">
                 <a href="{{ route('hrm.wallet.index') }}" class="sidebar-link">

@@ -22,8 +22,9 @@ class EmployeeController extends Controller
     public function create()
     {
         $departments = Department::orderBy('name')->get();
+        $organizations = \App\Models\Organization::orderBy('name')->get();
 
-        return view('hrm.employees-create', compact('departments'));
+        return view('hrm.employees-create', compact('departments', 'organizations'));
     }
 
     public function store(Request $request)
@@ -33,6 +34,7 @@ class EmployeeController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:employees,email'],
             'department_id' => ['nullable', 'exists:departments,id'],
+            'organization_id' => ['nullable', 'exists:organizations,id'],
             'salary' => ['required', 'numeric', 'min:0'],
             'bonus' => ['nullable', 'numeric', 'min:0'],
             'reference_full_name' => ['nullable', 'string', 'max:255'],
@@ -52,6 +54,7 @@ class EmployeeController extends Controller
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'department_id' => $validated['department_id'] ?? null,
+            'organization_id' => $validated['organization_id'] ?? null,
             'salary' => $validated['salary'],
             'bonus' => $validated['bonus'] ?? null,
             'reference_full_name' => $validated['reference_full_name'] ?? null,
@@ -112,14 +115,16 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $departments = Department::orderBy('name')->get();
+        $organizations = \App\Models\Organization::orderBy('name')->get();
 
-        return view('hrm.employees-edit', compact('employee', 'departments'));
+        return view('hrm.employees-edit', compact('employee', 'departments', 'organizations'));
     }
 
     public function update(Request $request, Employee $employee)
     {
         $validated = $request->validate([
             'department_id' => ['nullable', 'exists:departments,id'],
+            'organization_id' => ['nullable', 'exists:organizations,id'],
             'salary' => ['nullable', 'numeric', 'min:0'],
             'bonus' => ['nullable', 'numeric', 'min:0'],
             'reference_full_name' => ['nullable', 'string', 'max:255'],
@@ -131,6 +136,7 @@ class EmployeeController extends Controller
         ]);
         $employee->update([
             'department_id' => $validated['department_id'] ?? $employee->department_id,
+            'organization_id' => $validated['organization_id'] ?? $employee->organization_id,
             'salary' => $validated['salary'] ?? $employee->salary,
             'bonus' => $validated['bonus'] ?? $employee->bonus,
             'reference_full_name' => $validated['reference_full_name'] ?? $employee->reference_full_name,

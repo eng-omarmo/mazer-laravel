@@ -14,6 +14,7 @@ class Employee extends Model
         'last_name',
         'email',
         'department_id',
+        'organization_id',
         'salary',
         'bonus',
         'reference_full_name',
@@ -34,5 +35,10 @@ class Employee extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
     }
 }
