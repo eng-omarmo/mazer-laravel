@@ -97,6 +97,7 @@ class PayrollBatchController extends Controller
                 'net_pay' => $net,
                 'advance_deduction' => $plannedAdv,
                 'status' => 'draft',
+                ''
             ]);
             $totalEmployees++;
             $totalAmount += $net;

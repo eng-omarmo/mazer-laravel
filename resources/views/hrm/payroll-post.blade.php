@@ -57,7 +57,9 @@
                                     <th>Position</th>
                                     <th>Basic Salary</th>
                                     <th>Deductions</th>
+                                    <th>Net</th>
                                     <th>Advance Deduction</th>
+                                    <th>Commission</th>
                                     <th>Net Paid</th>
                                 </tr>
                             </thead>
@@ -67,7 +69,7 @@
                                 $basic = $e->salary ?? 0;
                                 $bonus = $e->bonus ?? 0;
                                 $advances = \App\Models\EmployeeAdvance::where('employee_id', $e->id)
-                                ->whereIn('status', ['paid'])
+                                ->whereIn('status', ['approved'])
                                 ->orderBy('date')
                                 ->get();
                                 $remainingTotal = $advances->sum(function($a){ return (float) ($a->remaining_balance ?? $a->amount); });
@@ -93,7 +95,15 @@
                                     </td>
 
                                     <td>
+                                        @php $initialNet = ($basic + $bonus) - 0; @endphp
+                                        <strong class="line-net">{{ number_format($initialNet,2) }}</strong>
+                                    </td>
+
+                                    <td>
                                         <input type="number" step="0.01" min="0" name="lines[{{ $e->id }}][advance_deduction]" value="{{ old('lines.'.$e->id.'.advance_deduction', round(min($sumInstallments, $remainingTotal, ($basic + $bonus)), 2)) }}" class="form-control line-adv-input">
+                                    </td>
+                                     <td>
+                                        <input type="number" step="0.01" min="0" name="lines[{{ $e->id }}][commission]" value="{{ $bonus }}" class="form-control line-comm-input" readonly>
                                     </td>
                                     <td>
                                         <strong class="line-netpaid">{{ number_format((($basic + $bonus) - min($sumInstallments, $remainingTotal, ($basic + $bonus))),2) }}</strong>
@@ -109,14 +119,16 @@
 
                             function recalc(row) {
                                 const basic = parseFloat(row.querySelector('.line-basic').value || '0');
-                                const allow = 0;
+                                const commission = parseFloat(row.querySelector('.line-comm-input').value || '0');
                                 const deduct = parseFloat(row.querySelector('.line-deduct').value || '0');
-                                const net = basic + allow - deduct;
+                                const net = basic + commission - deduct;
                                 const remaining = parseFloat(row.dataset.remaining || '0');
+                                const installments = parseFloat(row.dataset.installments || '0');
                                 const input = row.querySelector('.line-adv-input');
                                 let inputVal = parseFloat(input.value);
                                 if (isNaN(inputVal)) inputVal = 0;
-                                const exceeds = inputVal > remaining;
+                                const maxAdv = Math.min(remaining, installments, net);
+                                const exceeds = inputVal > maxAdv;
                                 let feedback = row.querySelector('.adv-feedback');
                                 if (exceeds) {
                                     input.classList.add('is-invalid');
@@ -125,7 +137,7 @@
                                         feedback.className = 'invalid-feedback adv-feedback';
                                         input.closest('td').appendChild(feedback);
                                     }
-                                    feedback.textContent = `Exceeds remaining balance. Max: ${remaining.toFixed(2)}`;
+                                    feedback.textContent = `Exceeds limit. Max: ${maxAdv.toFixed(2)}`;
                                 } else {
                                     input.classList.remove('is-invalid');
                                     if (feedback) feedback.remove();
@@ -135,7 +147,7 @@
                                 row.querySelector('.line-netpaid').textContent = netPaid.toFixed(2);
                             }
                             rows.forEach(row => {
-                                ['.line-basic', '.line-allow', '.line-deduct'].forEach(sel => {
+                                ['.line-basic', '.line-comm-input', '.line-deduct'].forEach(sel => {
                                     const input = row.querySelector(sel);
                                     input.addEventListener('input', () => recalc(row));
                                 });

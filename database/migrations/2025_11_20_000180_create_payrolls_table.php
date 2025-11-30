@@ -10,7 +10,6 @@ return new class extends Migration
     {
         Schema::create('payrolls', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('batch_id')->nullable()->constrained('payroll_batches')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
             $table->unsignedSmallInteger('year');
             $table->unsignedTinyInteger('month');
@@ -25,7 +24,6 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
             $table->unique(['employee_id', 'year', 'month']);
-            $table->index(['batch_id']);
             $table->index(['status']);
         });
     }
