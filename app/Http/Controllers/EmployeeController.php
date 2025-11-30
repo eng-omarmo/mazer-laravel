@@ -65,11 +65,11 @@ class EmployeeController extends Controller
         ]);
 
         $uploaderId = Auth::id();
-        $dir = 'employee_docs/'.$employee->id;
+        $dir = 'employee_docs/' . $employee->id;
 
         if ($request->hasFile('cv')) {
             $cvFile = $request->file('cv');
-            $cvName = 'cv_'.time().'.'.$cvFile->getClientOriginalExtension();
+            $cvName = 'cv_' . time() . '.' . $cvFile->getClientOriginalExtension();
             $cvPath = Storage::disk('public')->putFileAs($dir, $cvFile, $cvName);
             EmployeeDocument::create([
                 'employee_id' => $employee->id,
@@ -82,7 +82,7 @@ class EmployeeController extends Controller
 
         if ($request->hasFile('contract')) {
             $ctFile = $request->file('contract');
-            $ctName = 'contract_'.time().'.'.$ctFile->getClientOriginalExtension();
+            $ctName = 'contract_' . time() . '.' . $ctFile->getClientOriginalExtension();
             $ctPath = Storage::disk('public')->putFileAs($dir, $ctFile, $ctName);
             EmployeeDocument::create([
                 'employee_id' => $employee->id,
@@ -95,7 +95,7 @@ class EmployeeController extends Controller
 
         if ($request->hasFile('identity_document')) {
             $idFile = $request->file('identity_document');
-            $idName = 'identity_'.time().'.'.$idFile->getClientOriginalExtension();
+            $idName = 'identity_' . time() . '.' . $idFile->getClientOriginalExtension();
             $idPath = Storage::disk('public')->putFileAs($dir, $idFile, $idName);
             EmployeeDocument::create([
                 'employee_id' => $employee->id,
@@ -125,8 +125,9 @@ class EmployeeController extends Controller
             'reference_full_name' => ['nullable', 'string', 'max:255'],
             'reference_phone' => ['nullable', 'string', 'max:30'],
             'identity_doc_number' => ['nullable', 'string', 'max:100'],
-            'fingerprint_id' => ['nullable', 'string', 'max:100', 'unique:employees,fingerprint_id,'.$employee->id],
+            'fingerprint_id' => ['nullable', 'string', 'max:100', 'unique:employees,fingerprint_id,' . $employee->id],
             'identity_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
+            'account_number' => ['nullable', 'string', 'max:100'],
         ]);
         $employee->update([
             'department_id' => $validated['department_id'] ?? $employee->department_id,
@@ -136,13 +137,14 @@ class EmployeeController extends Controller
             'reference_phone' => $validated['reference_phone'] ?? $employee->reference_phone,
             'identity_doc_number' => $validated['identity_doc_number'] ?? $employee->identity_doc_number,
             'fingerprint_id' => $validated['fingerprint_id'] ?? $employee->fingerprint_id,
+            'account_number' => $validated['account_number'] ?? $employee->account_number,
         ]);
 
         if ($request->hasFile('identity_document')) {
             $uploaderId = Auth::id();
-            $dir = 'employee_docs/'.$employee->id;
+            $dir = 'employee_docs/' . $employee->id;
             $idFile = $request->file('identity_document');
-            $idName = 'identity_'.time().'.'.$idFile->getClientOriginalExtension();
+            $idName = 'identity_' . time() . '.' . $idFile->getClientOriginalExtension();
             $idPath = Storage::disk('public')->putFileAs($dir, $idFile, $idName);
             EmployeeDocument::create([
                 'employee_id' => $employee->id,

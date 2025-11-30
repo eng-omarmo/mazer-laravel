@@ -31,7 +31,7 @@
                         <select name="status" class="form-select">
                             <option value="">All</option>
                             @foreach(['pending','approved','paid'] as $s)
-                                <option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
+                            <option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -40,7 +40,7 @@
                         <select name="employee_id" class="form-select">
                             <option value="">All</option>
                             @foreach($employees as $emp)
-                                <option value="{{ $emp->id }}" {{ (string)request('employee_id')===(string)$emp->id?'selected':'' }}>{{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->email }})</option>
+                            <option value="{{ $emp->id }}" {{ (string)request('employee_id')===(string)$emp->id?'selected':'' }}>{{ $emp->first_name }} {{ $emp->last_name }} ({{ $emp->email }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -73,14 +73,14 @@
                         </thead>
                         <tbody>
                             @foreach($advances as $a)
-                                <tr>
-                                    <td>{{ $a->date }}</td>
-                                    <td>{{ $a->employee->first_name }} {{ $a->employee->last_name }}</td>
-                                    <td>{{ number_format($a->amount,2) }}</td>
-                                    <td>{{ number_format($a->remaining_balance ?? $a->amount,2) }}</td>
-                                    <td>{{ $a->next_due_date ?: '-' }} @if($a->isOverdue()) <span class="badge bg-danger">Overdue</span>@endif</td>
-                                    <td><span class="badge bg-{{ $a->status==='paid'?'success':($a->status==='approved'?'primary':'secondary') }}">{{ ucfirst($a->status) }}</span></td>
-                                </tr>
+                            <tr>
+                                <td>{{ $a->date }}</td>
+                                <td>{{ $a->employee->first_name }} {{ $a->employee->last_name }}</td>
+                                <td>{{ number_format($a->amount,2) }}</td>
+                                <td>{{ number_format($a->remaining_balance ?? $a->amount,2) }}</td>
+                                <td>{{ $a->next_due_date ?: '-' }} @if($a->isOverdue()) <span class="badge bg-danger">Overdue</span>@endif</td>
+                                <td><span class="badge bg-{{ $a->status==='paid'?'success':($a->status==='approved'?'primary':'secondary') }}">{{ ucfirst($a->status) }}</span></td>
+                            </tr>
                             @endforeach
                         </tbody>
                     </table>
