@@ -47,6 +47,15 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Organization</label>
+                        <select name="organization_id" class="form-select">
+                            <option value="">All</option>
+                            @foreach($organizations as $org)
+                                <option value="{{ $org->id }}" {{ request('organization_id')==$org->id?'selected':'' }}>{{ $org->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-2 align-self-end">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
                     </div>
@@ -71,11 +80,12 @@
                 <h6 class="mt-3">Payroll Items</h6>
                 <div class="table-responsive">
                     <table class="table table-striped">
-                        <thead><tr><th>Employee</th><th>Period</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Net</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Employee</th><th>Organization</th><th>Period</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Net</th><th>Status</th></tr></thead>
                         <tbody>
                             @foreach($items as $p)
                                 <tr>
                                     <td>{{ optional($p->employee)->first_name }} {{ optional($p->employee)->last_name }}</td>
+                                    <td>{{ optional(optional($p->employee)->organization)->name }}</td>
                                     <td>{{ $p->year }}-{{ str_pad($p->month,2,'0',STR_PAD_LEFT) }}</td>
                                     <td>{{ number_format($p->basic_salary,2) }}</td>
                                     <td>{{ number_format($p->allowances,2) }}</td>

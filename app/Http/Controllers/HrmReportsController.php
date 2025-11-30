@@ -170,6 +170,11 @@ class HrmReportsController extends Controller
         if ($request->filled('employee_id')) {
             $query->where('employee_id', (int) $request->input('employee_id'));
         }
+        if ($request->filled('organization_id')) {
+            $query->whereHas('employee', function ($q) use ($request) {
+                $q->where('organization_id', (int) $request->input('organization_id'));
+            });
+        }
         $items = $query->orderByDesc('year')->orderByDesc('month')->paginate(10)->appends($request->query());
 
         $totalCostByMonth = Payroll::selectRaw('year, month, SUM(net_pay) as total')->groupBy('year', 'month')->orderByDesc('year')->orderByDesc('month')->limit(12)->get();
@@ -191,7 +196,8 @@ class HrmReportsController extends Controller
             : 0;
 
         $employees = Employee::orderBy('first_name')->orderBy('last_name')->get();
+        $organizations = \App\Models\Organization::orderBy('name')->get();
 
-        return view('hrm.reports-payroll', compact('items', 'totalCostByMonth', 'totalAllow', 'totalDeduct', 'paymentCompletionRate', 'avgApprovalHours', 'employees'));
+        return view('hrm.reports-payroll', compact('items', 'totalCostByMonth', 'totalAllow', 'totalDeduct', 'paymentCompletionRate', 'avgApprovalHours', 'employees', 'organizations'));
     }
 }
