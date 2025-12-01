@@ -9,6 +9,8 @@ use App\Models\EmployeeDocument;
 use App\Models\EmployeeLeave;
 use App\Models\Payroll;
 use App\Models\PayrollBatch;
+use App\Models\Expense;
+use App\Models\ExpensePayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -199,5 +201,31 @@ class HrmReportsController extends Controller
         $organizations = \App\Models\Organization::orderBy('name')->get();
 
         return view('hrm.reports-payroll', compact('items', 'totalCostByMonth', 'totalAllow', 'totalDeduct', 'paymentCompletionRate', 'avgApprovalHours', 'employees', 'organizations'));
+    }
+
+    public function expenses(Request $request)
+    {
+        $query = Expense::with(['supplier','organization']);
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('organization_id')) {
+            $query->where('organization_id', (int) $request->input('organization_id'));
+        }
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', (int) $request->input('supplier_id'));
+        }
+        $items = $query->orderByDesc('created_at')->paginate(10)->appends($request->query());
+
+        $totalAmount = Expense::sum('amount');
+        $totalPaid = ExpensePayment::sum('amount');
+        $totalRemaining = max(0.0, $totalAmount - $totalPaid);
+        $monthly = Expense::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as ym, SUM(amount) as total')
+            ->groupBy('ym')->orderByDesc('ym')->limit(12)->get();
+
+        $suppliers = \App\Models\Supplier::orderBy('name')->get();
+        $organizations = \App\Models\Organization::orderBy('name')->get();
+
+        return view('hrm.reports-expenses', compact('items', 'totalAmount', 'totalPaid', 'totalRemaining', 'monthly', 'suppliers', 'organizations'));
     }
 }

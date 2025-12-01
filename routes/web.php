@@ -23,6 +23,9 @@ Route::get('/dashboard', function () {
         if (\App\Models\PayrollBatch::where('status', 'submitted')->exists()) {
             session()->flash('status', 'Payroll approval waiting');
         }
+        if (\App\Models\ExpenseApprovalStep::where('status', 'pending')->exists()) {
+            session()->flash('status', 'Expense approvals pending');
+        }
     }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -85,8 +88,29 @@ Route::middleware('auth')->group(function () {
         Route::post('/advances/{advance}/approve', [\App\Http\Controllers\EmployeeAdvanceController::class, 'approve'])->name('advances.approve');
         Route::post('/advances/{advance}/paid', [\App\Http\Controllers\EmployeeAdvanceController::class, 'markPaid'])->name('advances.paid');
         Route::get('/advances/{advance}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'show'])->name('advances.show');
-        Route::post('/advances/{advance}/repay', [\App\Http\Controllers\EmployeeAdvanceController::class, 'repay'])->name('advances.repay');
+        Route::get('/advances/{advance}/repay', [\App\Http\Controllers\EmployeeAdvanceController::class, 'repay'])->name('advances.repay');
         Route::get('/advances/receipt/{transaction}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'receipt'])->name('advances.receipt');
+
+        Route::get('/suppliers', [\App\Http\Controllers\SupplierController::class, 'index'])->name('suppliers.index');
+        Route::get('/suppliers/create', [\App\Http\Controllers\SupplierController::class, 'create'])->name('suppliers.create');
+        Route::post('/suppliers', [\App\Http\Controllers\SupplierController::class, 'store'])->name('suppliers.store');
+        Route::get('/suppliers/{supplier}/edit', [\App\Http\Controllers\SupplierController::class, 'edit'])->name('suppliers.edit');
+        Route::patch('/suppliers/{supplier}', [\App\Http\Controllers\SupplierController::class, 'update'])->name('suppliers.update');
+        Route::delete('/suppliers/{supplier}', [\App\Http\Controllers\SupplierController::class, 'destroy'])->name('suppliers.destroy');
+
+        Route::get('/expenses', [\App\Http\Controllers\ExpenseController::class, 'index'])->name('expenses.index');
+        Route::get('/expenses/create', [\App\Http\Controllers\ExpenseController::class, 'create'])->name('expenses.create');
+        Route::post('/expenses', [\App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
+        Route::get('/expenses/{expense}/edit', [\App\Http\Controllers\ExpenseController::class, 'edit'])->name('expenses.edit');
+        Route::get('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'show'])->name('expenses.show');
+        Route::patch('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->name('expenses.destroy');
+        Route::post('/expenses/{expense}/review', [\App\Http\Controllers\ExpenseController::class, 'review'])->name('expenses.review');
+        Route::post('/expenses/{expense}/approve', [\App\Http\Controllers\ExpenseController::class, 'approve'])->name('expenses.approve');
+        Route::post('/expenses/{expense}/pay', [\App\Http\Controllers\ExpenseController::class, 'pay'])->name('expenses.pay');
+        Route::post('/expenses/{expense}/approvals/{step}/approve', [\App\Http\Controllers\ExpenseController::class, 'approveStep'])->name('expenses.approvals.approve');
+        Route::post('/expenses/{expense}/approvals/{step}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectStep'])->name('expenses.approvals.reject');
+        Route::post('/expenses/{expense}/approvals/add', [\App\Http\Controllers\ExpenseController::class, 'addStep'])->name('expenses.approvals.add');
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');
@@ -111,6 +135,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/payroll', [HrmReportsController::class, 'payroll'])->name('reports.payroll');
         Route::get('/reports/advances', [\App\Http\Controllers\ReportsController::class, 'advances'])->name('reports.advances');
         Route::get('/reports/advances.csv', [\App\Http\Controllers\ReportsController::class, 'advancesCsv'])->name('reports.advances.csv');
+        Route::get('/reports/expenses', [HrmReportsController::class, 'expenses'])->name('reports.expenses');
 
         Route::get('/organizations', [\App\Http\Controllers\OrganizationController::class, 'index'])->name('organizations.index');
         Route::get('/organizations/create', [\App\Http\Controllers\OrganizationController::class, 'create'])->name('organizations.create');

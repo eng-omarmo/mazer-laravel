@@ -51,7 +51,7 @@ class DepartmentController extends Controller
     public function update(Request $request, Department $department)
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'unique:departments,code,'.$department->id],
+            'code' => ['required', 'string', 'max:50', 'unique:departments,code,' . $department->id],
             'name' => ['required', 'string', 'max:255'],
             'head_employee_id' => ['nullable', 'exists:employees,id'],
         ]);

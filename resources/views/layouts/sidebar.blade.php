@@ -43,6 +43,26 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.departments.create') ? 'active' : '' }}"><a href="{{ route('hrm.departments.create') }}"><i class="bi bi-calendar-plus"> </i> Add</a></li>
                 </ul>
             </li>
+            <li class="sidebar-item has-sub {{ request()->is('hrm/suppliers*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-truck"></i>
+                    <span>Suppliers</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('hrm.suppliers.index') ? 'active' : '' }}"><a href="{{ route('hrm.suppliers.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.suppliers.create') ? 'active' : '' }}"><a href="{{ route('hrm.suppliers.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                </ul>
+            </li>
+            <li class="sidebar-item has-sub {{ request()->is('hrm/expenses*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-receipt"></i>
+                    <span>Expenses</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('hrm.expenses.index') ? 'active' : '' }}"><a href="{{ route('hrm.expenses.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.expenses.create') ? 'active' : '' }}"><a href="{{ route('hrm.expenses.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                </ul>
+            </li>
             <li class="sidebar-item has-sub {{ request()->is('hrm/employees*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-people-fill"></i>
