@@ -9,6 +9,7 @@ use App\Models\Payroll;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\MerchantPayService;
 
 class PayrollController extends Controller
 {
@@ -125,29 +126,29 @@ class PayrollController extends Controller
     public function markPaid(Payroll $payroll)
     {
         $this->authorizeRole(['finance', 'admin']);
-        $repayment = $this->applyAdvanceRepayments($payroll);
-        $payroll->update([
-            'advance_deduction' => $repayment['total'],
-            'status' => 'paid',
-            'paid_by' => Auth::id(),
-            'paid_at' => now(),
-        ]);
-        if ($repayment['total'] > 0) {
-            $wallet = Wallet::main();
-            $wallet->update(['balance' => $wallet->balance + $repayment['total']]);
+        $employee = $payroll->employee;
+        $phone = (string) ($employee->reference_phone ?? $employee->account_number ?? '');
+        if ($phone === '') {
+            return back()->withErrors(['phone' => 'Employee phone/account is required to initialize payment']);
         }
-        if ($payroll->batch_id) {
-            $batch = $payroll->batch;
-            if ($batch) {
-                $allPaid = $batch->payrolls()->where('status', '!=', 'paid')->count() === 0;
-                if ($allPaid && $batch->status !== 'paid') {
-                    $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
-                }
-                $this->recalcBatchTotals($payroll);
-            }
+        $amount = number_format((float) $payroll->net_pay, 2, '.', '');
+        $currency = (string) config('merchantpay.currency', 'USD');
+        $successUrl = route('hrm.payroll.index');
+        $cancelUrl = route('hrm.payroll.index');
+        $orderInfo = [
+            'item_name' => 'Payroll ' . $payroll->year . '-' . str_pad($payroll->month, 2, '0', STR_PAD_LEFT),
+            'order_no' => 'PAY-' . $payroll->id . '-' . now()->format('YmdHis'),
+        ];
+
+        $svc = app(MerchantPayService::class);
+        $res = $svc->createTransactionInfo($phone, $amount, $currency, $successUrl, $cancelUrl, $orderInfo);
+
+        $approvedUrl = (string) data_get($res, 'data.approvedUrl');
+        if (! $approvedUrl) {
+            return back()->withErrors(['payment' => 'Unable to initialize payment']);
         }
 
-        return back()->with('status', 'Payroll marked as paid');
+        return redirect()->away($approvedUrl);
     }
 
     private function applyAdvanceRepayments(Payroll $payroll): array
@@ -174,7 +175,6 @@ class PayrollController extends Controller
                 if ($adv->status !== 'paid') {
                     $adv->update(['status' => 'paid']);
                 }
-
                 continue;
             }
             $installment = (float) ($adv->installment_amount ?: $remaining);

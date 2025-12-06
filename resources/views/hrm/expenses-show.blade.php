@@ -90,51 +90,7 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <h6>Approval Steps</h6>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead><tr><th>Step</th><th>Status</th><th>Action</th></tr></thead>
-                                <tbody>
-                                    @forelse($steps as $s)
-                                        <tr>
-                                            <td>{{ $s->step_order }}. {{ $s->name }}</td>
-                                            <td><span class="badge bg-{{ $s->status==='approved'?'success':($s->status==='rejected'?'danger':'warning') }}">{{ ucfirst($s->status) }}</span></td>
-                                            <td class="d-flex gap-1">
-                                                @if($s->status==='pending')
-                                                    <form method="post" action="{{ route('hrm.expenses.approvals.approve', [$expense, $s]) }}">@csrf<button class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Approve</button></form>
-                                                    <form method="post" action="{{ route('hrm.expenses.approvals.reject', [$expense, $s]) }}" class="d-inline">@csrf
-                                                        <input type="hidden" name="notes" value="Rejected by user">
-                                                        <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> Reject</button>
-                                                    </form>
-                                                @else - @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr><td colspan="3" class="text-center">No approval steps configured</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                        @if(strtolower(auth()->user()->role ?? 'hrm')==='admin')
-                        <form method="post" action="{{ route('hrm.expenses.approvals.add', $expense) }}" class="row g-2 mt-2">
-                            @csrf
-                            <div class="col-md-6">
-                                <label class="form-label">Step name</label>
-                                <input type="text" name="name" class="form-control" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Order</label>
-                                <input type="number" name="step_order" class="form-control" min="1" required>
-                            </div>
-                            <div class="col-md-3 align-self-end">
-                                <button class="btn btn-outline-primary" type="submit"><i class="bi bi-plus-circle"></i> Add Step</button>
-                            </div>
-                        </form>
-                        @endif
-                    </div>
-                </div>
+
             </div>
         </div>
     </section>

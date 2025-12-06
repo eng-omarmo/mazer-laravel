@@ -24,9 +24,6 @@
     <div class="page-content">
         <section class="row">
             <div class="col-12 col-lg-12">
-                @if (session('status'))
-                <div class="alert alert-warning">{{ session('status') }}</div>
-                @endif
                 @php
                 $empCount = \App\Models\Employee::count();
                 $deptCount = \App\Models\Department::count();

@@ -23,9 +23,7 @@ Route::get('/dashboard', function () {
         if (\App\Models\PayrollBatch::where('status', 'submitted')->exists()) {
             session()->flash('status', 'Payroll approval waiting');
         }
-        if (\App\Models\ExpenseApprovalStep::where('status', 'pending')->exists()) {
-            session()->flash('status', 'Expense approvals pending');
-        }
+
     }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -108,9 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/expenses/{expense}/review', [\App\Http\Controllers\ExpenseController::class, 'review'])->name('expenses.review');
         Route::post('/expenses/{expense}/approve', [\App\Http\Controllers\ExpenseController::class, 'approve'])->name('expenses.approve');
         Route::post('/expenses/{expense}/pay', [\App\Http\Controllers\ExpenseController::class, 'pay'])->name('expenses.pay');
-        Route::post('/expenses/{expense}/approvals/{step}/approve', [\App\Http\Controllers\ExpenseController::class, 'approveStep'])->name('expenses.approvals.approve');
-        Route::post('/expenses/{expense}/approvals/{step}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectStep'])->name('expenses.approvals.reject');
-        Route::post('/expenses/{expense}/approvals/add', [\App\Http\Controllers\ExpenseController::class, 'addStep'])->name('expenses.approvals.add');
+
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');
