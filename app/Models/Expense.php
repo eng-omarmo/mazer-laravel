@@ -54,4 +54,13 @@ class Expense extends Model
         }
         return 'pending';
     }
+
+    public function approvalStatus() : string
+    {
+        $latestPayment = $this->payments()->latest()->first();
+        if ($latestPayment) {
+            return $latestPayment->approval_status;
+        }
+        return 'pending';
+    }
 }

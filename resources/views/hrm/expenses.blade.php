@@ -25,8 +25,13 @@
                 <div class="alert alert-success">{{ session('status') }}</div>
                 @endif
 
+                @php
+                    $role = strtolower(auth()->user()->role ?? 'hrm');
+                @endphp
                 <div class="d-flex mb-3 align-items-end gap-2">
+                    @if(in_array($role, ['credit_manager', 'admin']))
                     <a href="{{ route('hrm.expenses.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Expense</a>
+                    @endif
                     <form class="row g-2" method="get" action="{{ route('hrm.expenses.index') }}">
                         <div class="col-md-3">
                             <label class="form-label">Status</label>
@@ -71,6 +76,8 @@
                                 <th>Paid</th>
                                 <th>Balance</th>
                                 <th>Payment</th>
+                                <th>Approval</th>
+                                
                                 <th>Supplier</th>
                                 <th>Organization</th>
                                 <th>Document</th>
@@ -87,6 +94,12 @@
                                     <td>{{ number_format($x->totalPaid(),2) }}</td>
                                     <td>{{ number_format($x->remaining(),2) }}</td>
                                     <td><span class="badge bg-{{ $x->paymentStatus()==='paid'?'success':($x->paymentStatus()==='partial'?'warning':'secondary') }}">{{ ucfirst($x->paymentStatus()) }}</span></td>
+                        <td>
+    <span class="badge bg-{{ $x->approvalStatus() === 'approved' ? 'success' : ($x->approvalStatus() === 'pending' ? 'warning' : 'secondary') }}">
+        {{ ucfirst($x->approvalStatus()) }}
+    </span>
+</td>
+
                                     <td>{{ optional($x->supplier)->name }}</td>
                                     <td>{{ optional($x->organization)->name }}</td>
                                     <td>
@@ -98,25 +111,33 @@
                                     </td>
                                     <td><span class="badge bg-{{ $x->status==='approved'?'success':($x->status==='reviewed'?'primary':'secondary') }}">{{ ucfirst($x->status) }}</span></td>
                                     <td class="d-flex gap-1">
+                                        @if(in_array($role, ['credit_manager', 'admin']) && $x->status === 'pending')
                                         <a href="{{ route('hrm.expenses.edit', $x) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                                        @endif
+
+                                        @if(in_array($role, ['finance', 'admin']))
                                         <a href="{{ route('hrm.expenses.show', $x) }}" class="btn btn-primary btn-sm"><i class="bi bi-cash"></i> Pay</a>
-                                        @if($x->status==='pending')
+                                        @endif
+
+                                        @if($x->status==='pending' && in_array($role, ['finance', 'admin']))
                                             <form method="post" action="{{ route('hrm.expenses.review', $x) }}">
                                                 @csrf
                                                 <button class="btn btn-outline-warning btn-sm"><i class="bi bi-clipboard-check"></i> Review</button>
                                             </form>
                                         @endif
-                                        @if(in_array($x->status, ['pending','reviewed']))
+                                        @if($x->status==='reviewed' && in_array($role, ['admin']))
                                             <form method="post" action="{{ route('hrm.expenses.approve', $x) }}">
                                                 @csrf
                                                 <button class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Approve</button>
                                             </form>
                                         @endif
+                                        @if(in_array($role, ['admin']))
                                         <form method="post" action="{{ route('hrm.expenses.destroy', $x) }}" onsubmit="return confirm('Delete this expense?')">
                                             @csrf
                                             @method('delete')
                                             <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                                         </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

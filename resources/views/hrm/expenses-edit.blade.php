@@ -66,12 +66,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Status</label>
-                        <select name="status" class="form-select" required>
-                            <option value="pending" {{ (string)old('status', $expense->status)==='pending'?'selected':'' }}>Pending</option>
-                            <option value="reviewed" {{ (string)old('status', $expense->status)==='reviewed'?'selected':'' }}>Reviewed</option>
-                            <option value="approved" {{ (string)old('status', $expense->status)==='approved'?'selected':'' }}>Approved</option>
-                        </select>
-                        @error('status')<small class="text-danger">{{ $message }}</small>@enderror
+                        <input type="text" class="form-control" value="{{ ucfirst($expense->status) }}" disabled>
                     </div>
                     <div class="col-12 d-flex gap-2">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Update</button>

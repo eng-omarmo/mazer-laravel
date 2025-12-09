@@ -106,6 +106,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/expenses/{expense}/review', [\App\Http\Controllers\ExpenseController::class, 'review'])->name('expenses.review');
         Route::post('/expenses/{expense}/approve', [\App\Http\Controllers\ExpenseController::class, 'approve'])->name('expenses.approve');
         Route::post('/expenses/{expense}/pay', [\App\Http\Controllers\ExpenseController::class, 'pay'])->name('expenses.pay');
+        Route::get('/expenses/payments/pending', [\App\Http\Controllers\ExpenseController::class, 'pendingExpensePayments'])->name('expenses.payments.pending');
+
+        Route::post('/expenses/payments/{payment}/approve', [\App\Http\Controllers\ExpenseController::class, 'approvePayment'])->name('expense-payments.approve');
+        // Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->name('expense-payments.reject');
 
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');

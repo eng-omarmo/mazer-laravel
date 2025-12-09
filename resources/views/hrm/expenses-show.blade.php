@@ -24,18 +24,36 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-4"><strong>Type</strong><div>{{ $expense->type }}</div></div>
-                            <div class="col-md-4"><strong>Amount</strong><div>{{ number_format($expense->amount,2) }}</div></div>
-                            <div class="col-md-4"><strong>Supplier</strong><div>{{ optional($expense->supplier)->name ?: '-' }}</div></div>
-                            <div class="col-md-4"><strong>Organization</strong><div>{{ optional($expense->organization)->name ?: '-' }}</div></div>
-                            <div class="col-md-4"><strong>Status</strong><div><span class="badge bg-{{ $expense->status==='approved'?'primary':'secondary' }}">{{ ucfirst($expense->status) }}</span></div></div>
-                            <div class="col-md-4"><strong>Payment</strong><div><span class="badge bg-{{ $expense->paymentStatus()==='paid'?'success':($expense->paymentStatus()==='partial'?'warning':'secondary') }}">{{ ucfirst($expense->paymentStatus()) }}</span></div></div>
-                            <div class="col-md-12"><strong>Outstanding Balance</strong><div class="h5">{{ number_format($expense->remaining(),2) }}</div></div>
-                            <div class="col-md-12"><strong>Document</strong><div>
-                                @if($expense->document_path)
+                            <div class="col-md-4"><strong>Type</strong>
+                                <div>{{ $expense->type }}</div>
+                            </div>
+                            <div class="col-md-4"><strong>Amount</strong>
+                                <div>{{ number_format($expense->amount,2) }}</div>
+                            </div>
+                            <div class="col-md-4"><strong>Supplier</strong>
+                                <div>{{ optional($expense->supplier)->name ?: '-' }}</div>
+                            </div>
+                            <div class="col-md-4"><strong>Organization</strong>
+                                <div>{{ optional($expense->organization)->name ?: '-' }}</div>
+                            </div>
+                            <div class="col-md-4"><strong>Status</strong>
+                                <div><span class="badge bg-{{ $expense->status==='approved'?'primary':'secondary' }}">{{ ucfirst($expense->status) }}</span></div>
+                            </div>
+                            <div class="col-md-4"><strong>Payment</strong>
+                                <div><span class="badge bg-{{ $expense->paymentStatus()==='paid'?'success':($expense->paymentStatus()==='partial'?'warning':'secondary') }}">{{ ucfirst($expense->paymentStatus()) }}</span></div>
+                            </div>
+                            <div class="col-md-12"><strong>Outstanding Balance</strong>
+                                <div class="h5">{{ number_format($expense->remaining(),2) }}</div>
+                            </div>
+                            <div class="col-md-12"><strong>Document</strong>
+                                <div>
+                                    @if($expense->document_path)
                                     <a href="{{ asset('storage/'.$expense->document_path) }}" target="_blank">View</a>
-                                @else - @endif
-                            </div></div>
+                                    @else - @endif
+                                </div>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -45,17 +63,30 @@
                         <h6>Payment History</h6>
                         <div class="table-responsive">
                             <table class="table table-striped">
-                                <thead><tr><th>Date</th><th>Amount</th><th>By</th><th>Note</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>By</th>
+                                        <th>Note</th>
+                                        <th>Approval Status</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     @forelse($expense->payments as $p)
-                                        <tr>
-                                            <td>{{ $p->paid_at ? $p->paid_at->format('Y-m-d H:i') : $p->created_at->format('Y-m-d H:i') }}</td>
-                                            <td>{{ number_format($p->amount,2) }}</td>
-                                            <td>{{ optional($p->paid_by ? \App\Models\User::find($p->paid_by) : null)->name ?? '-' }}</td>
-                                            <td>{{ $p->note ?? '-' }}</td>
-                                        </tr>
+                                    <tr>
+                                        <td>{{ $p->paid_at ? $p->paid_at->format('Y-m-d H:i') : $p->created_at->format('Y-m-d H:i') }}</td>
+                                        <td>{{ number_format($p->amount,2) }}</td>
+                                        <td>{{ optional($p->paid_by ? \App\Models\User::find($p->paid_by) : null)->name ?? '-' }}</td>
+                                        <td>{{ $p->note ?? '-' }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ $p->is_approved ? 'success' : 'danger' }}">{{ $p->is_approved ? 'Approved' : 'Pending' }}</span>
+                                        </td>
+                                    </tr>
                                     @empty
-                                        <tr><td colspan="4" class="text-center">No payments</td></tr>
+                                    <tr>
+                                        <td colspan="4" class="text-center">No payments</td>
+                                    </tr>
                                     @endforelse
                                 </tbody>
                             </table>

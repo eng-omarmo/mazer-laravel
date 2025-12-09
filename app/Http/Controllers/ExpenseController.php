@@ -42,12 +42,18 @@ class ExpenseController extends Controller
 
     public function store(Request $request)
     {
+        $role = strtolower(auth()->user()->role ?? 'hrm');
+        // Only Credit Manager or Admin can initiate expense
+        if (! in_array($role, ['credit_manager', 'admin'])) {
+             abort(403, 'Only Credit Manager can initiate expenses.');
+        }
+
         $validated = $request->validate([
             'type' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'organization_id' => ['nullable', 'exists:organizations,id'],
-            'status' => ['required', 'string', 'in:pending,reviewed,approved'],
+            // 'status' is not validated from request because it's always pending initially
             'upload_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
 
@@ -64,10 +70,10 @@ class ExpenseController extends Controller
             'type' => $validated['type'],
             'amount' => $validated['amount'],
             'document_path' => $docPath,
-            'status' => $validated['status'],
+            'status' => 'pending', // Always pending initially
         ]);
 
-        return redirect()->route('hrm.expenses.index')->with('status', 'Expense created');
+        return redirect()->route('hrm.expenses.index')->with('status', 'Expense initiated');
     }
 
     public function edit(Expense $expense)
@@ -85,7 +91,7 @@ class ExpenseController extends Controller
             'amount' => ['required', 'numeric', 'min:0.01'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'organization_id' => ['nullable', 'exists:organizations,id'],
-            'status' => ['required', 'string', 'in:pending,reviewed,approved'],
+            // 'status' => ['required', 'string', 'in:pending,reviewed,approved'], // Status managed via workflow
             'upload_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
         ]);
 
@@ -102,7 +108,7 @@ class ExpenseController extends Controller
             'type' => $validated['type'],
             'amount' => $validated['amount'],
             'document_path' => $docPath,
-            'status' => $validated['status'],
+            // 'status' => $validated['status'], // Keep existing status
         ]);
 
         return redirect()->route('hrm.expenses.index')->with('status', 'Expense updated');
@@ -117,6 +123,11 @@ class ExpenseController extends Controller
 
     public function review(Expense $expense)
     {
+        $role = strtolower(auth()->user()->role ?? 'hrm');
+        if (! in_array($role, ['finance', 'admin'])) {
+            abort(403, 'Only Finance can review expenses.');
+        }
+
         $expense->update(['status' => 'reviewed']);
 
         return back()->with('status', 'Expense marked reviewed');
@@ -124,6 +135,11 @@ class ExpenseController extends Controller
 
     public function approve(Expense $expense)
     {
+        $role = strtolower(auth()->user()->role ?? 'hrm');
+        if (! in_array($role, ['admin'])) {
+            abort(403, 'Only Admin can approve expenses.');
+        }
+
         $expense->update(['status' => 'approved']);
 
         return back()->with('status', 'Expense approved');
@@ -141,8 +157,8 @@ class ExpenseController extends Controller
     public function pay(Request $request, Expense $expense)
     {
         $role = strtolower(auth()->user()->role ?? 'hrm');
-        if (! in_array($role, ['admin'])) {
-            abort(403);
+        if (! in_array($role, ['finance', 'admin'])) {
+            abort(403, 'Only Finance can initiate payments.');
         }
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
@@ -161,8 +177,27 @@ class ExpenseController extends Controller
             'paid_at' => $validated['paid_at'] ?? now(),
             'paid_by' => Auth::id(),
             'note' => $validated['note'] ?? null,
+            'is_approved' => false,
         ]);
 
-        return back()->with('status', 'Payment recorded');
+        return back()->with('status', 'Payment recorded, pending approval');
+    }
+
+    public function pendingExpensePayments()
+    {
+        $payments = ExpensePayment::where('is_approved', false)->with('expense')->paginate(10);
+        return view('hrm.expense-payments-pending', compact('payments'));
+    }
+
+    public function approvePayment(ExpensePayment $payment)
+    {
+        $role = strtolower(auth()->user()->role ?? 'hrm');
+        if (! in_array($role, ['admin'])) {
+            abort(403, 'Only Admin can approve payments.');
+        }
+
+        $payment->update(['is_approved' => true]);
+
+        return back()->with('status', 'Payment approved');
     }
 }

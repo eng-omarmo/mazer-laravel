@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('expense_id');
             $table->decimal('amount', 12, 2);
+            $table->boolean('is_approved')->default(false);
             $table->timestamp('paid_at')->nullable();
             $table->unsignedBigInteger('paid_by')->nullable();
             $table->string('note')->nullable();
@@ -27,4 +28,3 @@ return new class extends Migration
         Schema::dropIfExists('expense_payments');
     }
 };
-
