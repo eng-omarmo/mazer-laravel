@@ -111,7 +111,7 @@
                                     <a href="{{ route('hrm.expenses.edit', $x) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
                                     @endif
 
-                                    @if(in_array($role, ['finance', 'admin']))
+                                    @if(in_array($role, ['finance', 'admin']) && $x->payment_status != 'pending')
                                     <a href="{{ route('hrm.expenses.show', $x) }}" class="btn btn-primary btn-sm"><i class="bi bi-cash"></i> Pay</a>
                                     @endif
 
