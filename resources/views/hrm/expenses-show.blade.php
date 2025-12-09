@@ -40,10 +40,10 @@
                                 <div><span class="badge bg-{{ $expense->status==='approved'?'primary':'secondary' }}">{{ ucfirst($expense->status) }}</span></div>
                             </div>
                             <div class="col-md-4"><strong>Payment</strong>
-                                <div><span class="badge bg-{{ $expense->payment_status==='paid'?'success':($expense->payment_status==='partial'?'warning':'secondary') }}">{{ $expense->payment_status==='paid'?'Completed':($expense->payment_status==='partial'?'Partial Paid':'Pending') }}</span></div>
+                                <div><span class="badge bg-{{ $expense->payment_status==='paid'?'success':($expense->payment_status==='partial'?'warning':'secondary') }}">{{ ucfirst($expense->payment_status) }}</span></div>
                             </div>
                             <div class="col-md-12"><strong>Outstanding Balance</strong>
-                                <div class="h5">{{ number_format($expense->remaining(),2) }}</div>
+                                <div class="h5 text-{{ $expense->remaining() > 0 ? 'danger' : 'success' }}">{{ number_format($expense->remaining(),2) }}</div>
                             </div>
                             <div class="col-md-12"><strong>Document</strong>
                                 <div>
@@ -80,15 +80,34 @@
                                         <td>{{ optional($p->paid_by ? \App\Models\User::find($p->paid_by) : null)->name ?? '-' }}</td>
                                         <td>{{ $p->note ?? '-' }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $p->status === 'approved' ? 'success' : ($p->status === 'rejected' ? 'danger' : 'warning') }}">{{ ucfirst($p->status) }}</span>
+                                            @php
+                                                $badgeClass = match($p->status) {
+                                                    'approved' => 'success',
+                                                    'rejected' => 'danger',
+                                                    default => 'warning'
+                                                };
+                                            @endphp
+                                            <span class="badge bg-{{ $badgeClass }}">{{ ucfirst($p->status) }}</span>
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">No payments</td>
+                                        <td colspan="5" class="text-center">No payments</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="1" class="text-end"><strong>Total Paid (Approved):</strong></td>
+                                        <td><strong>{{ number_format($expense->totalPaid(), 2) }}</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="1" class="text-end"><strong>Outstanding Balance:</strong></td>
+                                        <td class="text-{{ $expense->remaining() > 0 ? 'danger' : 'success' }}"><strong>{{ number_format($expense->remaining(), 2) }}</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>

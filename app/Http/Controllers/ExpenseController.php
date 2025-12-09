@@ -167,7 +167,7 @@ class ExpenseController extends Controller
         ]);
         $remaining = $expense->remaining();
         $amount = (float) $validated['amount'];
-        if ($amount > $remaining + 0.00001) {
+        if ($amount > $remaining) {
             return back()->withErrors(['amount' => 'Amount exceeds remaining balance ('.number_format($remaining,2).')']);
         }
 
@@ -179,6 +179,8 @@ class ExpenseController extends Controller
             'note' => $validated['note'] ?? null,
             'status' => 'pending',
         ]);
+        //update
+        
 
         return back()->with('status', 'Payment recorded, pending approval');
     }

@@ -107,11 +107,11 @@
                                 </td>
                                 <td><span class="badge bg-{{ $x->status==='approved'?'success':($x->status==='reviewed'?'primary':'secondary') }}">{{ ucfirst($x->status) }}</span></td>
                                 <td class="d-flex gap-1">
-                                    @if(in_array($role, ['credit_manager', 'admin']) && $x->status === 'pending')
+                                    @if(in_array($role, ['credit_manager', 'admin']))
                                     <a href="{{ route('hrm.expenses.edit', $x) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
                                     @endif
 
-                                    @if(in_array($role, ['finance', 'admin']) && $x->payment_status != 'pending')
+                                    @if(in_array($role, ['finance', 'admin']) && $x->status != 'pending')
                                     <a href="{{ route('hrm.expenses.show', $x) }}" class="btn btn-primary btn-sm"><i class="bi bi-cash"></i> Pay</a>
                                     @endif
 
@@ -121,7 +121,7 @@
                                         <button class="btn btn-outline-warning btn-sm"><i class="bi bi-clipboard-check"></i> Review</button>
                                     </form>
                                     @endif
-                                    @if($x->status==='reviewed' && in_array($role, ['admin']))
+                                    @if($x->status==='reviewed' && in_array($role, ['admin']) )
                                     <form method="post" action="{{ route('hrm.expenses.approve', $x) }}">
                                         @csrf
                                         <button class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Approve</button>
