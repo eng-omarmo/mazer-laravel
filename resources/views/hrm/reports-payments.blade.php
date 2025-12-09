@@ -1,18 +1,18 @@
 @extends('layouts.master')
-@section('title','Expenses Report')
+@section('title','Expense Payments Report')
 @section('content')
 <div class="page-heading">
     <div class="page-title">
         <div class="row">
             <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Expenses Report</h3>
-                <p class="text-subtitle text-muted">Summary and trends</p>
+                <h3>Expense Payments Report</h3>
+                <p class="text-subtitle text-muted">Summary of payments made</p>
             </div>
             <div class="col-12 col-md-6 order-md-2 order-first">
                 <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Expenses Report</li>
+                        <li class="breadcrumb-item active" aria-current="page">Payments Report</li>
                     </ol>
                 </nav>
             </div>
@@ -23,27 +23,18 @@
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-md-4"><div class="h6">Total Amount</div><div class="h4">{{ number_format($totalAmount,2) }}</div></div>
-                    <div class="col-md-4"><div class="h6">Total Paid</div><div class="h4">{{ number_format($totalPaid,2) }}</div></div>
-                    <div class="col-md-4"><div class="h6">Total Remaining</div><div class="h4">{{ number_format($totalRemaining,2) }}</div></div>
+                    <div class="col-md-4"><div class="h6">Approved Amount</div><div class="h4">{{ number_format($approvedAmount,2) }}</div></div>
+                    <div class="col-md-4"><div class="h6">Pending Amount</div><div class="h4">{{ number_format($pendingAmount,2) }}</div></div>
                 </div>
 
-                <form class="row g-2 mb-3" method="get" action="{{ route('hrm.reports.expenses') }}">
+                <form class="row g-2 mb-3" method="get" action="{{ route('hrm.reports.payments') }}">
                     <div class="col-md-3">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
                             <option value="">All</option>
                             <option value="pending" {{ request('status')==='pending'?'selected':'' }}>Pending</option>
-                            <option value="reviewed" {{ request('status')==='reviewed'?'selected':'' }}>Reviewed</option>
                             <option value="approved" {{ request('status')==='approved'?'selected':'' }}>Approved</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Payment Status</label>
-                        <select name="payment_status" class="form-select">
-                            <option value="">All</option>
-                            <option value="pending" {{ request('payment_status')==='pending'?'selected':'' }}>Pending</option>
-                            <option value="partial" {{ request('payment_status')==='partial'?'selected':'' }}>Partial</option>
-                            <option value="paid" {{ request('payment_status')==='paid'?'selected':'' }}>Completed</option>
+                            <option value="rejected" {{ request('status')==='rejected'?'selected':'' }}>Rejected</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -76,48 +67,33 @@
                         <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
                     </div>
                     <div class="col-md-2 align-self-end">
-                        <a href="{{ route('hrm.reports.expenses.csv', request()->query()) }}" class="btn btn-success"><i class="bi bi-download"></i> CSV</a>
+                        <a href="{{ route('hrm.reports.payments.csv', request()->query()) }}" class="btn btn-success"><i class="bi bi-download"></i> CSV</a>
                     </div>
                 </form>
 
                 <div class="table-responsive">
                     <table class="table table-striped">
-                        <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Paid</th><th>Remaining</th><th>Status</th><th>Payment</th><th>Supplier</th><th>Organization</th></tr></thead>
+                        <thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Note</th><th>Expense ID</th><th>Supplier</th><th>Organization</th></tr></thead>
                         <tbody>
-                            @forelse($items as $x)
+                            @forelse($items as $p)
                                 <tr>
-                                    <td>{{ $x->created_at->format('Y-m-d') }}</td>
-                                    <td>{{ $x->type }}</td>
-                                    <td>{{ number_format($x->amount,2) }}</td>
-                                    <td>{{ number_format($x->totalPaid(),2) }}</td>
-                                    <td>{{ number_format($x->remaining(),2) }}</td>
-                                    <td>{{ ucfirst($x->status) }}</td>
-                                    <td><span class="badge bg-{{ $x->payment_status==='paid'?'success':($x->payment_status==='partial'?'warning':'secondary') }}">{{ ucfirst($x->payment_status) }}</span></td>
-                                    <td>{{ optional($x->supplier)->name }}</td>
-                                    <td>{{ optional($x->organization)->name }}</td>
+                                    <td>{{ $p->paid_at ? $p->paid_at->format('Y-m-d H:i') : '' }}</td>
+                                    <td>{{ number_format($p->amount,2) }}</td>
+                                    <td><span class="badge bg-{{ $p->status==='approved'?'success':($p->status==='rejected'?'danger':'warning') }}">{{ ucfirst($p->status) }}</span></td>
+                                    <td>{{ $p->note }}</td>
+                                    <td><a href="{{ route('hrm.expenses.show', $p->expense_id) }}">#{{ $p->expense_id }}</a></td>
+                                    <td>{{ optional($p->expense->supplier)->name }}</td>
+                                    <td>{{ optional($p->expense->organization)->name }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="9" class="text-center">No items</td></tr>
+                                <tr><td colspan="7" class="text-center">No payments</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                     {{ $items->links('pagination::bootstrap-5') }}
-                </div>
-
-                <h6 class="mt-4">Last 12 months</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead><tr><th>Month</th><th>Total</th></tr></thead>
-                        <tbody>
-                            @foreach($monthly as $m)
-                                <tr><td>{{ $m->ym }}</td><td>{{ number_format($m->total,2) }}</td></tr>
-                            @endforeach
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </section>
 </div>
 @endsection
-

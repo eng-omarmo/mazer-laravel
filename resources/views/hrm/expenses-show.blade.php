@@ -40,7 +40,7 @@
                                 <div><span class="badge bg-{{ $expense->status==='approved'?'primary':'secondary' }}">{{ ucfirst($expense->status) }}</span></div>
                             </div>
                             <div class="col-md-4"><strong>Payment</strong>
-                                <div><span class="badge bg-{{ $expense->paymentStatus()==='paid'?'success':($expense->paymentStatus()==='partial'?'warning':'secondary') }}">{{ ucfirst($expense->paymentStatus()) }}</span></div>
+                                <div><span class="badge bg-{{ $expense->payment_status==='paid'?'success':($expense->payment_status==='partial'?'warning':'secondary') }}">{{ $expense->payment_status==='paid'?'Completed':($expense->payment_status==='partial'?'Partial Paid':'Pending') }}</span></div>
                             </div>
                             <div class="col-md-12"><strong>Outstanding Balance</strong>
                                 <div class="h5">{{ number_format($expense->remaining(),2) }}</div>
@@ -80,7 +80,7 @@
                                         <td>{{ optional($p->paid_by ? \App\Models\User::find($p->paid_by) : null)->name ?? '-' }}</td>
                                         <td>{{ $p->note ?? '-' }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $p->is_approved ? 'success' : 'danger' }}">{{ $p->is_approved ? 'Approved' : 'Pending' }}</span>
+                                            <span class="badge bg-{{ $p->status === 'approved' ? 'success' : ($p->status === 'rejected' ? 'danger' : 'warning') }}">{{ ucfirst($p->status) }}</span>
                                         </td>
                                     </tr>
                                     @empty

@@ -60,12 +60,10 @@
                                             @csrf
                                             <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                         </form>
-                                        {{--
                                         <form action="{{ route('hrm.expense-payments.reject', $payment) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                         </form>
-                                        --}}
                                         @endif
 
                                         <a href="{{ route('hrm.expenses.show', $payment->expense) }}" class="btn btn-info btn-sm">View Details</a>

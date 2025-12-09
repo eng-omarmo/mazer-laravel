@@ -16,6 +16,7 @@ class Expense extends Model
         'amount',
         'document_path',
         'status',
+        'payment_status',
     ];
 
     public function supplier()
@@ -35,7 +36,7 @@ class Expense extends Model
 
     public function totalPaid(): float
     {
-        return (float) $this->payments()->sum('amount');
+        return (float) $this->payments()->where('status', 'approved')->sum('amount');
     }
 
     public function remaining(): float
@@ -43,24 +44,26 @@ class Expense extends Model
         return max(0.0, (float) $this->amount - $this->totalPaid());
     }
 
-    public function paymentStatus(): string
+    public function updatePaymentStatus()
     {
-        $rem = $this->remaining();
-        if ($rem <= 0) {
-            return 'paid';
+        $paid = $this->totalPaid();
+        if ($paid >= $this->amount - 0.0001) {
+            $this->update(['payment_status' => 'paid']);
+        } elseif ($paid > 0) {
+            $this->update(['payment_status' => 'partial']);
+        } else {
+            $this->update(['payment_status' => 'pending']);
         }
-        if ($rem < (float) $this->amount) {
-            return 'partial';
-        }
-        return 'pending';
     }
 
     public function approvalStatus() : string
     {
         $latestPayment = $this->payments()->latest()->first();
         if ($latestPayment) {
-            return $latestPayment->approval_status;
+            return $latestPayment->status;
         }
         return 'pending';
     }
+
+
 }

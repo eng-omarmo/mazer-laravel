@@ -209,17 +209,51 @@ class HrmReportsController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->string('payment_status'));
+        }
         if ($request->filled('organization_id')) {
             $query->where('organization_id', (int) $request->input('organization_id'));
         }
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', (int) $request->input('supplier_id'));
         }
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->date('to'));
+        }
+
         $items = $query->orderByDesc('created_at')->paginate(10)->appends($request->query());
 
-        $totalAmount = Expense::sum('amount');
-        $totalPaid = ExpensePayment::sum('amount');
+        // For summary stats, ideally respect filters, but traditionally summary is global or we can make it filtered.
+        // Let's make it respect the current filters for better reporting.
+        // We need to clone the query because paginate executes it.
+        // Actually paginate executes count and get.
+        // Let's re-build query for sums or just use global if performance is concern.
+        // Given it's a report, filtered stats are more useful.
+        
+        $statsQuery = Expense::query();
+        if ($request->filled('status')) $statsQuery->where('status', $request->string('status'));
+        if ($request->filled('payment_status')) $statsQuery->where('payment_status', $request->string('payment_status'));
+        if ($request->filled('organization_id')) $statsQuery->where('organization_id', (int) $request->input('organization_id'));
+        if ($request->filled('supplier_id')) $statsQuery->where('supplier_id', (int) $request->input('supplier_id'));
+        if ($request->filled('from')) $statsQuery->whereDate('created_at', '>=', $request->date('from'));
+        if ($request->filled('to')) $statsQuery->whereDate('created_at', '<=', $request->date('to'));
+
+        $totalAmount = $statsQuery->sum('amount');
+        
+        // Calculating total paid for filtered expenses is tricky because payments are in related table.
+        // We can use a join or whereHas.
+        // Simple approximation: Sum of amounts of expenses * (if fully paid). But partials exist.
+        // Correct way: Sum of approved payments for these expenses.
+        
+        $expenseIds = $statsQuery->pluck('id');
+        $totalPaid = ExpensePayment::whereIn('expense_id', $expenseIds)->where('status', 'approved')->sum('amount');
+        
         $totalRemaining = max(0.0, $totalAmount - $totalPaid);
+        
         $monthly = Expense::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as ym, SUM(amount) as total')
             ->groupBy('ym')->orderByDesc('ym')->limit(12)->get();
 
@@ -227,5 +261,131 @@ class HrmReportsController extends Controller
         $organizations = \App\Models\Organization::orderBy('name')->get();
 
         return view('hrm.reports-expenses', compact('items', 'totalAmount', 'totalPaid', 'totalRemaining', 'monthly', 'suppliers', 'organizations'));
+    }
+
+    public function expensesCsv(Request $request): StreamedResponse
+    {
+        $query = Expense::with(['supplier','organization']);
+        if ($request->filled('status')) $query->where('status', $request->string('status'));
+        if ($request->filled('payment_status')) $query->where('payment_status', $request->string('payment_status'));
+        if ($request->filled('organization_id')) $query->where('organization_id', (int) $request->input('organization_id'));
+        if ($request->filled('supplier_id')) $query->where('supplier_id', (int) $request->input('supplier_id'));
+        if ($request->filled('from')) $query->whereDate('created_at', '>=', $request->date('from'));
+        if ($request->filled('to')) $query->whereDate('created_at', '<=', $request->date('to'));
+
+        $rows = $query->orderByDesc('created_at')->get();
+        $response = new StreamedResponse(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Date', 'Type', 'Amount', 'Paid', 'Remaining', 'Status', 'Payment Status', 'Supplier', 'Organization']);
+            foreach ($rows as $x) {
+                fputcsv($out, [
+                    $x->created_at->format('Y-m-d'),
+                    $x->type,
+                    $x->amount,
+                    $x->totalPaid(),
+                    $x->remaining(),
+                    $x->status,
+                    $x->payment_status,
+                    optional($x->supplier)->name,
+                    optional($x->organization)->name
+                ]);
+            }
+            fclose($out);
+        });
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="expenses.csv"');
+
+        return $response;
+    }
+
+    public function payments(Request $request)
+    {
+        $query = ExpensePayment::with(['expense.supplier', 'expense.organization', 'expense']);
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('from')) {
+            $query->whereDate('paid_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('paid_at', '<=', $request->date('to'));
+        }
+        if ($request->filled('organization_id')) {
+            $query->whereHas('expense', function($q) use ($request) {
+                $q->where('organization_id', (int) $request->input('organization_id'));
+            });
+        }
+        if ($request->filled('supplier_id')) {
+             $query->whereHas('expense', function($q) use ($request) {
+                $q->where('supplier_id', (int) $request->input('supplier_id'));
+            });
+        }
+
+        $items = $query->orderByDesc('paid_at')->paginate(20)->appends($request->query());
+        
+        $statsQuery = ExpensePayment::query();
+        if ($request->filled('status')) $statsQuery->where('status', $request->string('status'));
+        if ($request->filled('from')) $statsQuery->whereDate('paid_at', '>=', $request->date('from'));
+        if ($request->filled('to')) $statsQuery->whereDate('paid_at', '<=', $request->date('to'));
+        if ($request->filled('organization_id')) {
+            $statsQuery->whereHas('expense', function($q) use ($request) {
+                $q->where('organization_id', (int) $request->input('organization_id'));
+            });
+        }
+        if ($request->filled('supplier_id')) {
+             $statsQuery->whereHas('expense', function($q) use ($request) {
+                $q->where('supplier_id', (int) $request->input('supplier_id'));
+            });
+        }
+
+        $totalAmount = $statsQuery->sum('amount');
+        $approvedAmount = (clone $statsQuery)->where('status', 'approved')->sum('amount');
+        $pendingAmount = (clone $statsQuery)->where('status', 'pending')->sum('amount');
+
+        $suppliers = \App\Models\Supplier::orderBy('name')->get();
+        $organizations = \App\Models\Organization::orderBy('name')->get();
+
+        return view('hrm.reports-payments', compact('items', 'totalAmount', 'approvedAmount', 'pendingAmount', 'suppliers', 'organizations'));
+    }
+
+    public function paymentsCsv(Request $request): StreamedResponse
+    {
+        $query = ExpensePayment::with(['expense.supplier', 'expense.organization', 'expense']);
+        if ($request->filled('status')) $query->where('status', $request->string('status'));
+        if ($request->filled('from')) $query->whereDate('paid_at', '>=', $request->date('from'));
+        if ($request->filled('to')) $query->whereDate('paid_at', '<=', $request->date('to'));
+        if ($request->filled('organization_id')) {
+            $query->whereHas('expense', function($q) use ($request) {
+                $q->where('organization_id', (int) $request->input('organization_id'));
+            });
+        }
+        if ($request->filled('supplier_id')) {
+             $query->whereHas('expense', function($q) use ($request) {
+                $q->where('supplier_id', (int) $request->input('supplier_id'));
+            });
+        }
+
+        $rows = $query->orderByDesc('paid_at')->get();
+        $response = new StreamedResponse(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Date', 'Amount', 'Note', 'Status', 'Expense ID', 'Supplier', 'Organization']);
+            foreach ($rows as $p) {
+                fputcsv($out, [
+                    $p->paid_at ? $p->paid_at->format('Y-m-d H:i') : '',
+                    $p->amount,
+                    $p->note,
+                    $p->status,
+                    $p->expense_id,
+                    optional($p->expense->supplier)->name,
+                    optional($p->expense->organization)->name
+                ]);
+            }
+            fclose($out);
+        });
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="payments.csv"');
+
+        return $response;
     }
 }

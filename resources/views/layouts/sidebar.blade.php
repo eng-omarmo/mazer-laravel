@@ -70,13 +70,13 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.expenses.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.expenses.index') }}"><i class="bi bi-card-list"></i> List</a></li>
-
+        <li class="submenu-item {{ request()->routeIs('hrm.expenses.create') ? 'active' : '' }}"><a
+                            href="{{ route('hrm.expenses.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
 
                     <li class="submenu-item {{ request()->routeIs('hrm.expenses.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.expenses.payments.pending') }}"><i class="bi bi-card-list"></i> Pending
                             Payment</a></li>
-                    <li class="submenu-item {{ request()->routeIs('hrm.expenses.create') ? 'active' : '' }}"><a
-                            href="{{ route('hrm.expenses.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+
                 </ul>
             </li>
             <li class="sidebar-item has-sub {{ request()->is('hrm/employees*') ? 'active' : '' }}">
@@ -193,6 +193,12 @@
                             Attendance</a></li>
                     <li class="submenu-item {{ request()->routeIs('hrm.reports.payroll') ? 'active' : '' }}"><a
                             href="{{ route('hrm.reports.payroll') }}"><i class="bi bi-cash-stack"></i> Payroll</a>
+                    </li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.expenses') ? 'active' : '' }}"><a
+                            href="{{ route('hrm.reports.expenses') }}"><i class="bi bi-receipt"></i> Expenses</a>
+                    </li>
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.payments') ? 'active' : '' }}"><a
+                            href="{{ route('hrm.reports.payments') }}"><i class="bi bi-credit-card"></i> Payments</a>
                     </li>
                 </ul>
             </li>

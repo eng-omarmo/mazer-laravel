@@ -177,7 +177,7 @@ class ExpenseController extends Controller
             'paid_at' => $validated['paid_at'] ?? now(),
             'paid_by' => Auth::id(),
             'note' => $validated['note'] ?? null,
-            'is_approved' => false,
+            'status' => 'pending',
         ]);
 
         return back()->with('status', 'Payment recorded, pending approval');
@@ -185,7 +185,7 @@ class ExpenseController extends Controller
 
     public function pendingExpensePayments()
     {
-        $payments = ExpensePayment::where('is_approved', false)->with('expense')->paginate(10);
+        $payments = ExpensePayment::where('status', 'pending')->with('expense')->paginate(10);
         return view('hrm.expense-payments-pending', compact('payments'));
     }
 
@@ -196,8 +196,22 @@ class ExpenseController extends Controller
             abort(403, 'Only Admin can approve payments.');
         }
 
-        $payment->update(['is_approved' => true]);
+        $payment->update(['status' => 'approved']);
+        $payment->expense->updatePaymentStatus();
 
         return back()->with('status', 'Payment approved');
+    }
+
+    public function rejectPayment(ExpensePayment $payment)
+    {
+        $role = strtolower(auth()->user()->role ?? 'hrm');
+        if (! in_array($role, ['admin'])) {
+            abort(403, 'Only Admin can reject payments.');
+        }
+
+        $payment->update(['status' => 'rejected']);
+        $payment->expense->updatePaymentStatus();
+
+        return back()->with('status', 'Payment rejected');
     }
 }

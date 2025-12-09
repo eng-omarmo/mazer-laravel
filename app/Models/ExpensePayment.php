@@ -15,7 +15,7 @@ class ExpensePayment extends Model
         'paid_at',
         'paid_by',
         'note',
-        'is_approved',
+        'status',
     ];
 
     protected $casts = [

@@ -109,7 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/expenses/payments/pending', [\App\Http\Controllers\ExpenseController::class, 'pendingExpensePayments'])->name('expenses.payments.pending');
 
         Route::post('/expenses/payments/{payment}/approve', [\App\Http\Controllers\ExpenseController::class, 'approvePayment'])->name('expense-payments.approve');
-        // Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->name('expense-payments.reject');
+        Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->name('expense-payments.reject');
 
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
@@ -136,6 +136,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/advances', [\App\Http\Controllers\ReportsController::class, 'advances'])->name('reports.advances');
         Route::get('/reports/advances.csv', [\App\Http\Controllers\ReportsController::class, 'advancesCsv'])->name('reports.advances.csv');
         Route::get('/reports/expenses', [HrmReportsController::class, 'expenses'])->name('reports.expenses');
+        Route::get('/reports/expenses.csv', [HrmReportsController::class, 'expensesCsv'])->name('reports.expenses.csv');
+        Route::get('/reports/payments', [HrmReportsController::class, 'payments'])->name('reports.payments');
+        Route::get('/reports/payments.csv', [HrmReportsController::class, 'paymentsCsv'])->name('reports.payments.csv');
 
         Route::get('/organizations', [\App\Http\Controllers\OrganizationController::class, 'index'])->name('organizations.index');
         Route::get('/organizations/create', [\App\Http\Controllers\OrganizationController::class, 'create'])->name('organizations.create');
