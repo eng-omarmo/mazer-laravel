@@ -15,7 +15,7 @@ class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Expense::with(['supplier','organization']);
+        $query = Expense::with(['supplier', 'organization']);
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
@@ -45,7 +45,7 @@ class ExpenseController extends Controller
         $role = strtolower(auth()->user()->role ?? 'hrm');
         // Only Credit Manager or Admin can initiate expense
         if (! in_array($role, ['credit_manager', 'admin'])) {
-             abort(403, 'Only Credit Manager can initiate expenses.');
+            abort(403, 'Only Credit Manager can initiate expenses.');
         }
 
         $validated = $request->validate([
@@ -147,11 +147,11 @@ class ExpenseController extends Controller
 
     public function show(Expense $expense)
     {
-        $expense->load(['supplier','organization','payments','payments.expense']);
+        $expense->load(['supplier', 'organization', 'payments', 'payments.expense']);
         $suppliers = Supplier::orderBy('name')->get();
         $organizations = Organization::orderBy('name')->get();
 
-        return view('hrm.expenses-show', compact('expense','suppliers','organizations'));
+        return view('hrm.expenses-show', compact('expense', 'suppliers', 'organizations'));
     }
 
     public function pay(Request $request, Expense $expense)
@@ -168,7 +168,7 @@ class ExpenseController extends Controller
         $remaining = $expense->remaining();
         $amount = (float) $validated['amount'];
         if ($amount > $remaining) {
-            return back()->withErrors(['amount' => 'Amount exceeds remaining balance ('.number_format($remaining,2).')']);
+            return back()->withErrors(['amount' => 'Amount exceeds remaining balance (' . number_format($remaining, 2) . ')']);
         }
 
         ExpensePayment::create([
@@ -180,7 +180,7 @@ class ExpenseController extends Controller
             'status' => 'pending',
         ]);
         //update
-        
+
 
         return back()->with('status', 'Payment recorded, pending approval');
     }
