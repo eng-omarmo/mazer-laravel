@@ -34,7 +34,7 @@ class UserController extends Controller
 
         $role = Role::find($validated['role']);
 
-     $user =   User::create([
+        $user =   User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
@@ -60,24 +60,29 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['nullable', 'string', 'max:30'],
             'position' => ['nullable', 'string', 'max:100'],
-            'role' => ['required', 'in:admin,hrm,finance'],
+            'role' => ['required', 'exists:roles,id'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
+
+        $role = Role::findOrFail($validated['role']);
 
         $update = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'position' => $validated['position'] ?? null,
-            'role' => $validated['role'],
+            'role' => $role->name,
         ];
         if (!empty($validated['password'])) {
             $update['password'] = Hash::make($validated['password']);
         }
         $user->update($update);
+
+        // Sync Spatie roles
+        $user->syncRoles($role->name);
 
         return redirect()->route('admin.users.index')->with('status', 'User updated');
     }

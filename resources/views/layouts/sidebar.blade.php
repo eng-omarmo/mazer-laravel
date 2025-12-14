@@ -23,6 +23,7 @@
             </li>
             <li class="sidebar-title">HRM</li>
 
+            @can('view organizations')
             <li class="sidebar-item has-sub {{ request()->is('hrm/organizations*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-building"></i>
@@ -31,12 +32,16 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.organizations.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.organizations.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create organizations')
                     <li class="submenu-item {{ request()->routeIs('hrm.organizations.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.organizations.create') }}"><i class="bi bi-plus-circle"></i> Add</a>
                     </li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
+            @can('view departments')
             <li class="sidebar-item has-sub {{ request()->is('hrm/departments') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-diagram-3-fill"></i>
@@ -45,13 +50,17 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.departments.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.departments.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create departments')
                     <li class="submenu-item {{ request()->routeIs('hrm.departments.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.departments.create') }}"><i class="bi bi-calendar-plus"> </i> Add</a>
                     </li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
 
+            @can('view employees')
             <li class="sidebar-item has-sub {{ request()->is('hrm/employees*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-people-fill"></i>
@@ -60,11 +69,15 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.employees.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.employees.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create employees')
                     <li class="submenu-item {{ request()->routeIs('hrm.employees.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.employees.create') }}"><i class="bi bi-person-plus"></i> Add</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
+            @can('view documents')
             <li class="sidebar-item has-sub {{ request()->is('hrm/verification') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-check2-square"></i>
@@ -76,6 +89,8 @@
                             Verification</a></li>
                 </ul>
             </li>
+            @endcan
+            @can('view leaves')
             <li class="sidebar-item has-sub {{ request()->is('hrm/leave*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-calendar-check"></i>
@@ -84,11 +99,15 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.leave.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.leave.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create leaves')
                     <li class="submenu-item {{ request()->routeIs('hrm.leave.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.leave.create') }}"><i class="bi bi-calendar-plus"></i> Add</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
+            @can('view payroll')
             <li class="sidebar-item has-sub {{ request()->is('hrm/payroll*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-cash-stack"></i>
@@ -97,6 +116,7 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create payroll')
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
                     <li class="submenu-item {{ request()->is('hrm/payroll/batches*') ? 'active' : '' }}"><a
@@ -105,9 +125,12 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.batches.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.batches.create', ['preview' => 0]) }}"><i
                                 class="bi bi-upload"></i> Post Payroll</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
+            @can('view advances')
             <li class="sidebar-item has-sub {{ request()->is('hrm/advances*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-cash"></i>
@@ -116,20 +139,26 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('hrm.advances.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.advances.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create advances')
                     <li class="submenu-item {{ request()->routeIs('hrm.advances.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.advances.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
 
 
+            @can('view wallet')
             <li class="sidebar-item {{ request()->routeIs('hrm.wallet.*') ? 'active' : '' }}">
                 <a href="{{ route('hrm.wallet.index') }}" class="sidebar-link">
                     <i class="bi bi-wallet2"></i>
                     <span>Wallet</span>
                 </a>
             </li>
+            @endcan
 
+            @can('view attendance')
             <li class="sidebar-item has-sub {{ request()->is('hrm/attendance*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-calendar-day"></i>
@@ -139,16 +168,22 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.attendance.index') ? 'active' : '' }}"><a
                             href="{{ route('hrm.attendance.index') }}"><i class="bi bi-card-list"></i> Daily Logs</a>
                     </li>
+                    @can('mark attendance')
                     <li class="submenu-item {{ request()->routeIs('hrm.attendance.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.attendance.create') }}"><i class="bi bi-plus-circle"></i> Mark
                             Attendance</a></li>
+                    @endcan
+                    @can('view attendance summary')
                     <li class="submenu-item {{ request()->routeIs('hrm.attendance.summary') ? 'active' : '' }}"><a
                             href="{{ route('hrm.attendance.summary') }}"><i class="bi bi-bar-chart"></i> Monthly
                             Summary</a></li>
+                    @endcan
 
                 </ul>
             </li>
+            @endcan
 
+            @can('view reports')
             <li class="sidebar-item has-sub {{ request()->is('hrm/reports*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-bar-chart"></i>
@@ -175,23 +210,35 @@
                     </li>
                 </ul>
             </li>
+            @endcan
+
+            @canany(['view suppliers', 'view expenses'])
             <li class="sidebar-item has-sub {{ (request()->is('hrm/suppliers*') || request()->is('hrm/expenses*')) ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-receipt"></i>
                     <span>Expense Management</span>
                 </a>
                 <ul class="submenu" style="display: none;">
+                    @can('view suppliers')
                     <li class="submenu-item {{ request()->is('hrm/suppliers*') ? 'active' : '' }}"><a
                             href="{{ route('hrm.suppliers.index') }}"><i class="bi bi-truck"></i> Suppliers</a></li>
+                    @endcan
+                    @can('view expenses')
                     <li class="submenu-item {{ (request()->is('hrm/expenses*') && !request()->routeIs('hrm.expenses.payments.pending')) ? 'active' : '' }}"><a
                             href="{{ route('hrm.expenses.index') }}"><i class="bi bi-file-text"></i> Expenses</a></li>
+                    @endcan
+                    @can('view pending payments')
                     <li class="submenu-item {{ request()->routeIs('hrm.expenses.payments.pending') ? 'active' : '' }}"><a
                             href="{{ route('hrm.expenses.payments.pending') }}"><i class="bi bi-clock"></i> Pending Payments</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
+            @canany(['view users', 'view roles', 'view permissions'])
             <li class="sidebar-title">Administration</li>
 
+            @can('view users')
             <li class="sidebar-item has-sub {{ request()->is('admin/users*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-people"></i>
@@ -200,23 +247,33 @@
                 <ul class="submenu" style="display: none;">
                     <li class="submenu-item {{ request()->routeIs('admin.users.index') ? 'active' : '' }}"><a
                             href="{{ route('admin.users.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create users')
                     <li class="submenu-item {{ request()->routeIs('admin.users.create') ? 'active' : '' }}"><a
                             href="{{ route('admin.users.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
 
+            @canany(['view roles', 'view permissions'])
             <li class="sidebar-item has-sub {{ request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-shield-lock"></i>
                     <span>Access Control</span>
                 </a>
                 <ul class="submenu" style="display: none;">
+                    @can('view roles')
                     <li class="submenu-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"><a
                             href="{{ route('admin.roles.index') }}"><i class="bi bi-person-badge"></i> Roles</a></li>
+                    @endcan
+                    @can('view permissions')
                     <li class="submenu-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}"><a
                             href="{{ route('admin.permissions.index') }}"><i class="bi bi-key"></i> Permissions</a></li>
+                    @endcan
                 </ul>
             </li>
+            @endcan
+            @endcanany
 
             <li class="sidebar-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                 <a href="{{ route('profile.edit') }}" class="sidebar-link">

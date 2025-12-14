@@ -50,7 +50,7 @@
                         <label class="form-label">Role</label>
                         <select name="role" class="form-select" required>
                             @foreach($roles as $r)
-                                <option value="{{ $r }}" {{ (string)old('role', $user->role)===(string)$r?'selected':'' }}>{{ strtoupper($r) }}</option>
+                                <option value="{{ $r->id }}" {{ (old('role') == $r->id || $user->hasRole($r->name)) ? 'selected' : '' }}>{{ strtoupper($r->name) }}</option>
                             @endforeach
                         </select>
                         @error('role')<small class="text-danger">{{ $message }}</small>@enderror

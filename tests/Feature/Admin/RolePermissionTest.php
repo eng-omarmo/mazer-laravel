@@ -17,13 +17,18 @@ class RolePermissionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
+        // Seed permissions
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+
         // Create Admin User
         $this->adminUser = User::factory()->create([
             'role' => 'admin',
         ]);
-        
-        // Setup base permissions/roles if needed by app
+
+        // Ensure admin user has admin role (since factory might not trigger the seeder logic for new users automatically unless we explicitly assign it or rely on the role column)
+        // In this app, we are migrating to Spatie roles, so let's assign it.
+        $this->adminUser->assignRole('admin');
     }
 
     public function test_admin_can_view_roles()
@@ -81,7 +86,7 @@ class RolePermissionTest extends TestCase
 
     public function test_cannot_delete_admin_role()
     {
-        $role = Role::create(['name' => 'admin']); // Simulate admin role
+        $role = Role::where('name', 'admin')->firstOrFail();
 
         $response = $this->actingAs($this->adminUser)->delete(route('admin.roles.destroy', $role));
 
@@ -107,5 +112,26 @@ class RolePermissionTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('name');
+    }
+
+    public function test_admin_can_update_user_role()
+    {
+        $user = User::factory()->create(['role' => 'hrm']);
+        $user->assignRole('hrm');
+
+        $financeRole = Role::where('name', 'finance')->first();
+
+        $response = $this->actingAs($this->adminUser)->patch(route('admin.users.update', $user), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $financeRole->id, // Send ID
+        ]);
+
+        $response->assertRedirect(route('admin.users.index'));
+
+        $user->refresh();
+        $this->assertEquals('finance', $user->role); // Legacy column
+        $this->assertTrue($user->hasRole('finance')); // Spatie role
+        $this->assertFalse($user->hasRole('hrm')); // Should be synced (replaced)
     }
 }
