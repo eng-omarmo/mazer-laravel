@@ -156,6 +156,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/{user}/edit', [\App\Http\Controllers\UserController::class, 'edit'])->name('users.edit');
         Route::patch('/users/{user}', [\App\Http\Controllers\UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
+
+        // Role Management
+        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+
+        // Permission Management
+        Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class);
     });
 
 });

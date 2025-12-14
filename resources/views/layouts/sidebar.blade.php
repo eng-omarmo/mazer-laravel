@@ -194,7 +194,7 @@
 
             <li class="sidebar-item has-sub {{ request()->is('admin/users*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
-                    <i class="bi bi-gear"></i>
+                    <i class="bi bi-people"></i>
                     <span>Users</span>
                 </a>
                 <ul class="submenu" style="display: none;">
@@ -202,6 +202,19 @@
                             href="{{ route('admin.users.index') }}"><i class="bi bi-card-list"></i> List</a></li>
                     <li class="submenu-item {{ request()->routeIs('admin.users.create') ? 'active' : '' }}"><a
                             href="{{ route('admin.users.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                </ul>
+            </li>
+
+            <li class="sidebar-item has-sub {{ request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>Access Control</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}"><a
+                            href="{{ route('admin.roles.index') }}"><i class="bi bi-person-badge"></i> Roles</a></li>
+                    <li class="submenu-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}"><a
+                            href="{{ route('admin.permissions.index') }}"><i class="bi bi-key"></i> Permissions</a></li>
                 </ul>
             </li>
 

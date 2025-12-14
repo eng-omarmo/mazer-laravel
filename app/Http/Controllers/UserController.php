@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -16,7 +17,7 @@ class UserController extends Controller
 
     public function create()
     {
-        $roles = ['admin','hrm','finance'];
+        $roles = Role::all();
         return view('admin.users-create', compact('roles'));
     }
 
@@ -27,25 +28,30 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
             'position' => ['nullable', 'string', 'max:100'],
-            'role' => ['required', 'in:admin,hrm,finance'],
+            'role' => ['required', 'exists:roles,id'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        User::create([
+        $role = Role::find($validated['role']);
+
+     $user =   User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'position' => $validated['position'] ?? null,
-            'role' => $validated['role'],
+            'role' => $role->name,
             'password' => Hash::make($validated['password']),
         ]);
+        //assign role to user
+        $user->assignRole($role->name);
+
 
         return redirect()->route('admin.users.index')->with('status', 'User created');
     }
 
     public function edit(User $user)
     {
-        $roles = ['admin','hrm','finance'];
+        $roles = Role::all();
 
         return view('admin.users-edit', compact('user', 'roles'));
     }
