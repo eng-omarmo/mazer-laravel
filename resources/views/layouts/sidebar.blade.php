@@ -14,7 +14,6 @@
     <div class="sidebar-menu">
         <ul class="menu">
             <li class="sidebar-title">Main</li>
-
             <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <a href="{{ route('dashboard') }}" class="sidebar-link">
                     <i class="bi bi-grid-fill"></i>
@@ -58,7 +57,7 @@
                 </ul>
             </li>
 
-            
+
             @endcan
 
 
