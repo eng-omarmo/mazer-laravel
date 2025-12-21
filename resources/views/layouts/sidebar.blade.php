@@ -56,11 +56,7 @@
                     @endcan
                 </ul>
             </li>
-
-
             @endcan
-
-
             @can('view employees')
             <li class="sidebar-item has-sub {{ request()->is('hrm/employees*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
