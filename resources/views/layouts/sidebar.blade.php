@@ -107,7 +107,6 @@
                 </ul>
             </li>
             @endcan
-
             @can('view payroll')
             <li class="sidebar-item has-sub {{ request()->is('hrm/payroll*') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
