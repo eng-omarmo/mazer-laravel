@@ -19,18 +19,27 @@ class RolePermissionSeeder extends Seeder
 
         // Create Permissions
         $permissions = [
+            // Access Control (Admin)
+            'view roles',
+            'create roles',
+            'edit roles',
+            'delete roles',
+            'view permissions',
+            'create permissions',
+            'edit permissions',
+            'delete permissions',
             // Employee Management
             'view employees',
             'create employees',
             'edit employees',
             'delete employees',
-            
+
             // Department Management
             'view departments',
             'create departments',
             'edit departments',
             'delete departments',
-            
+
             // Leave Management
             'view leaves',
             'create leaves',
@@ -38,7 +47,7 @@ class RolePermissionSeeder extends Seeder
             'delete leaves',
             'approve leaves',
             'reject leaves',
-            
+
             // Payroll Management
             'view payroll',
             'create payroll',
@@ -46,7 +55,7 @@ class RolePermissionSeeder extends Seeder
             'delete payroll',
             'approve payroll',
             'mark payroll paid',
-            
+
             // Payroll Batch Management
             'view payroll batches',
             'create payroll batches',
@@ -55,26 +64,26 @@ class RolePermissionSeeder extends Seeder
             'approve payroll batches',
             'reject payroll batches',
             'mark batch paid',
-            
+
             // Attendance Management
             'view attendance',
             'create attendance',
             'edit attendance',
             'view attendance summary',
             'export attendance',
-            
+
             // Employee Advances
             'view advances',
             'create advances',
             'approve advances',
             'mark advance paid',
             'view advance receipts',
-            
+
             // Document Verification
             'view verification',
             'approve documents',
             'reject documents',
-            
+
             // Expense Management
             'view expenses',
             'create expenses',
@@ -83,24 +92,25 @@ class RolePermissionSeeder extends Seeder
             'review expenses',
             'approve expenses',
             'pay expenses',
-            
+
             // Supplier Management
             'view suppliers',
             'create suppliers',
             'edit suppliers',
             'delete suppliers',
-            
+
             // Organization Management
             'view organizations',
             'create organizations',
             'edit organizations',
             'delete organizations',
-            
+
             // Wallet Management
             'view wallet',
             'deposit wallet',
-            
+
             // Reports
+            'view reports',
             'view employee reports',
             'view leave reports',
             'view attendance reports',
@@ -108,7 +118,10 @@ class RolePermissionSeeder extends Seeder
             'view expense reports',
             'view advance reports',
             'export reports',
-            
+
+            // Payments
+            'view pending payments',
+
             // User Management (Admin only)
             'view users',
             'create users',
@@ -126,6 +139,7 @@ class RolePermissionSeeder extends Seeder
 
         $hrmRole = Role::firstOrCreate(['name' => 'hrm']);
         $hrmRole->givePermissionTo([
+            'view reports',
             'view employees',
             'create employees',
             'edit employees',
@@ -175,6 +189,7 @@ class RolePermissionSeeder extends Seeder
 
         $financeRole = Role::firstOrCreate(['name' => 'finance']);
         $financeRole->givePermissionTo([
+            'view reports',
             'view payroll',
             'view payroll batches',
             'approve payroll batches',
@@ -183,6 +198,7 @@ class RolePermissionSeeder extends Seeder
             'review expenses',
             'approve expenses',
             'pay expenses',
+            'view pending payments',
             'view wallet',
             'deposit wallet',
             'view payroll reports',
@@ -212,7 +228,7 @@ class RolePermissionSeeder extends Seeder
         $users = User::all();
         foreach ($users as $user) {
             $oldRole = strtolower($user->role ?? 'employee');
-            
+
             // Map old role names to new Spatie roles
             $roleMap = [
                 'admin' => 'admin',
@@ -222,9 +238,9 @@ class RolePermissionSeeder extends Seeder
                 'credit_manager' => 'credit_manager',
                 'employee' => 'employee',
             ];
-            
+
             $newRole = $roleMap[$oldRole] ?? 'employee';
-            
+
             if (!$user->hasRole($newRole)) {
                 $user->assignRole($newRole);
             }

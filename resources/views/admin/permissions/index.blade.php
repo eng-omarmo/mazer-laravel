@@ -26,7 +26,9 @@
                 @endif
 
                 <div class="mb-3">
+                    @can('create permissions')
                     <a href="{{ route('admin.permissions.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Permission</a>
+                    @endcan
                 </div>
 
                 <div class="table-responsive">
@@ -45,12 +47,16 @@
                                     <td>{{ $permission->guard_name }}</td>
                                     <td>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('admin.permissions.edit', $permission) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                                            <form action="{{ route('admin.permissions.destroy', $permission) }}" method="POST" onsubmit="return confirm('Delete this permission?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                            </form>
+                                            @can('edit permissions')
+                                                <a href="{{ route('admin.permissions.edit', $permission) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                            @endcan
+                                            @can('delete permissions')
+                                                <form action="{{ route('admin.permissions.destroy', $permission) }}" method="POST" onsubmit="return confirm('Delete this permission?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

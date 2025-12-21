@@ -45,8 +45,8 @@ Route::middleware('auth')->group(function () {
 
         Route::middleware(['can:view documents'])->group(function () {
             Route::get('/verification', [DocumentVerificationController::class, 'index'])->name('verification.index');
-            Route::post('/verification/{document}/approve', [DocumentVerificationController::class, 'approve'])->middleware('can:verify documents')->name('verification.approve');
-            Route::post('/verification/{document}/reject', [DocumentVerificationController::class, 'reject'])->middleware('can:verify documents')->name('verification.reject');
+            Route::post('/verification/{document}/approve', [DocumentVerificationController::class, 'approve'])->middleware('can:approve documents')->name('verification.approve');
+            Route::post('/verification/{document}/reject', [DocumentVerificationController::class, 'reject'])->middleware('can:reject documents')->name('verification.reject');
         });
 
         Route::middleware(['can:view departments'])->group(function () {
@@ -74,19 +74,19 @@ Route::middleware('auth')->group(function () {
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
             Route::get('/payroll/create', [PayrollController::class, 'create'])->middleware('can:create payroll')->name('payroll.create');
             Route::post('/payroll', [PayrollController::class, 'store'])->middleware('can:create payroll')->name('payroll.store');
-            Route::get('/payroll/{payroll}/edit', [PayrollController::class, 'edit'])->middleware('can:process payroll')->name('payroll.edit');
-            Route::patch('/payroll/{payroll}', [PayrollController::class, 'update'])->middleware('can:process payroll')->name('payroll.update');
-            Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->middleware('can:process payroll')->name('payroll.destroy');
-            Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->middleware('can:process payroll')->name('payroll.approve');
-            Route::post('/payroll/{payroll}/paid', [PayrollController::class, 'markPaid'])->middleware('can:process payroll')->name('payroll.paid');
+            Route::get('/payroll/{payroll}/edit', [PayrollController::class, 'edit'])->middleware('can:edit payroll')->name('payroll.edit');
+            Route::patch('/payroll/{payroll}', [PayrollController::class, 'update'])->middleware('can:edit payroll')->name('payroll.update');
+            Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->middleware('can:delete payroll')->name('payroll.destroy');
+            Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->middleware('can:approve payroll')->name('payroll.approve');
+            Route::post('/payroll/{payroll}/paid', [PayrollController::class, 'markPaid'])->middleware('can:mark payroll paid')->name('payroll.paid');
         });
 
         Route::middleware(['can:view attendance'])->group(function () {
             Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-            Route::get('/attendance/create', [AttendanceController::class, 'create'])->middleware('can:mark attendance')->name('attendance.create');
-            Route::post('/attendance', [AttendanceController::class, 'store'])->middleware('can:mark attendance')->name('attendance.store');
-            Route::get('/attendance/{log}/edit', [AttendanceController::class, 'edit'])->middleware('can:mark attendance')->name('attendance.edit');
-            Route::patch('/attendance/{log}', [AttendanceController::class, 'update'])->middleware('can:mark attendance')->name('attendance.update');
+            Route::get('/attendance/create', [AttendanceController::class, 'create'])->middleware('can:create attendance')->name('attendance.create');
+            Route::post('/attendance', [AttendanceController::class, 'store'])->middleware('can:create attendance')->name('attendance.store');
+            Route::get('/attendance/{log}/edit', [AttendanceController::class, 'edit'])->middleware('can:edit attendance')->name('attendance.edit');
+            Route::patch('/attendance/{log}', [AttendanceController::class, 'update'])->middleware('can:edit attendance')->name('attendance.update');
             Route::get('/attendance/summary', [AttendanceController::class, 'summary'])->middleware('can:view attendance summary')->name('attendance.summary');
             Route::get('/attendance/export/csv', [AttendanceController::class, 'exportCsv'])->middleware('can:view attendance summary')->name('attendance.export.csv');
             Route::get('/attendance/my', [AttendanceController::class, 'myHistory'])->name('attendance.my');
@@ -97,10 +97,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/advances/create', [\App\Http\Controllers\EmployeeAdvanceController::class, 'create'])->middleware('can:create advances')->name('advances.create');
             Route::post('/advances', [\App\Http\Controllers\EmployeeAdvanceController::class, 'store'])->middleware('can:create advances')->name('advances.store');
             Route::post('/advances/{advance}/approve', [\App\Http\Controllers\EmployeeAdvanceController::class, 'approve'])->middleware('can:approve advances')->name('advances.approve');
-            Route::post('/advances/{advance}/paid', [\App\Http\Controllers\EmployeeAdvanceController::class, 'markPaid'])->middleware('can:approve advances')->name('advances.paid');
+            Route::post('/advances/{advance}/paid', [\App\Http\Controllers\EmployeeAdvanceController::class, 'markPaid'])->middleware('can:mark advance paid')->name('advances.paid');
             Route::get('/advances/{advance}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'show'])->name('advances.show');
-            Route::get('/advances/{advance}/repay', [\App\Http\Controllers\EmployeeAdvanceController::class, 'repay'])->name('advances.repay');
-            Route::get('/advances/receipt/{transaction}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'receipt'])->name('advances.receipt');
+            Route::get('/advances/{advance}/repay', [\App\Http\Controllers\EmployeeAdvanceController::class, 'repay'])->middleware('can:approve advances')->name('advances.repay');
+            Route::get('/advances/receipt/{transaction}', [\App\Http\Controllers\EmployeeAdvanceController::class, 'receipt'])->middleware('can:view advance receipts')->name('advances.receipt');
         });
 
         Route::middleware(['can:view suppliers'])->group(function () {
@@ -131,23 +131,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->middleware('can:pay expenses')->name('expense-payments.reject');
 
 
-        Route::middleware(['can:process payroll'])->group(function () {
-            Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->name('payroll.batches.index');
-            Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->name('payroll.batches.create');
-            Route::post('/payroll/batches', [PayrollBatchController::class, 'store'])->name('payroll.batches.store');
-            Route::get('/payroll/batches/{batch}', [PayrollBatchController::class, 'show'])->name('payroll.batches.show');
-            Route::patch('/payroll/batches/{batch}', [PayrollBatchController::class, 'update'])->name('payroll.batches.update');
-            Route::post('/payroll/batches/{batch}/submit', [PayrollBatchController::class, 'submit'])->name('payroll.batches.submit');
-            Route::post('/payroll/batches/{batch}/approve', [PayrollBatchController::class, 'approve'])->name('payroll.batches.approve');
-            Route::post('/payroll/batches/{batch}/reject', [PayrollBatchController::class, 'reject'])->name('payroll.batches.reject');
-            Route::post('/payroll/batches/{batch}/paid', [PayrollBatchController::class, 'markPaid'])->name('payroll.batches.paid');
-            Route::post('/payroll/batches/approve-all', [PayrollBatchController::class, 'approveAllPending'])->name('payroll.batches.approveAll');
-            Route::post('/payroll/batches/paid-all', [PayrollBatchController::class, 'markPaidAllApproved'])->name('payroll.batches.paidAll');
-        });
+        Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->middleware('can:view payroll batches')->name('payroll.batches.index');
+        Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->middleware('can:create payroll batches')->name('payroll.batches.create');
+        Route::post('/payroll/batches', [PayrollBatchController::class, 'store'])->middleware('can:create payroll batches')->name('payroll.batches.store');
+        Route::get('/payroll/batches/{batch}', [PayrollBatchController::class, 'show'])->middleware('can:view payroll batches')->name('payroll.batches.show');
+        Route::patch('/payroll/batches/{batch}', [PayrollBatchController::class, 'update'])->middleware('can:edit payroll batches')->name('payroll.batches.update');
+        Route::post('/payroll/batches/{batch}/submit', [PayrollBatchController::class, 'submit'])->middleware('can:submit payroll batches')->name('payroll.batches.submit');
+        Route::post('/payroll/batches/{batch}/approve', [PayrollBatchController::class, 'approve'])->middleware('can:approve payroll batches')->name('payroll.batches.approve');
+        Route::post('/payroll/batches/{batch}/reject', [PayrollBatchController::class, 'reject'])->middleware('can:reject payroll batches')->name('payroll.batches.reject');
+        Route::post('/payroll/batches/{batch}/paid', [PayrollBatchController::class, 'markPaid'])->middleware('can:mark batch paid')->name('payroll.batches.paid');
+        Route::post('/payroll/batches/approve-all', [PayrollBatchController::class, 'approveAllPending'])->middleware('can:approve payroll batches')->name('payroll.batches.approveAll');
+        Route::post('/payroll/batches/paid-all', [PayrollBatchController::class, 'markPaidAllApproved'])->middleware('can:mark batch paid')->name('payroll.batches.paidAll');
 
         Route::middleware(['can:view wallet'])->group(function () {
             Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
-            Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->middleware('can:manage wallet')->name('wallet.deposit');
+            Route::post('/wallet/deposit', [WalletController::class, 'deposit'])->middleware('can:deposit wallet')->name('wallet.deposit');
         });
 
         Route::middleware(['can:view reports'])->group(function () {
@@ -186,11 +184,21 @@ Route::middleware('auth')->group(function () {
             Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->middleware('can:delete users')->name('users.destroy');
         });
 
-        // Role Management
-        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->middleware('can:view roles');
+        // Role Management (granular)
+        Route::get('/roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->middleware('can:view roles')->name('roles.index');
+        Route::get('/roles/create', [\App\Http\Controllers\Admin\RoleController::class, 'create'])->middleware('can:create roles')->name('roles.create');
+        Route::post('/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->middleware('can:create roles')->name('roles.store');
+        Route::get('/roles/{role}/edit', [\App\Http\Controllers\Admin\RoleController::class, 'edit'])->middleware('can:edit roles')->name('roles.edit');
+        Route::patch('/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->middleware('can:edit roles')->name('roles.update');
+        Route::delete('/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy'])->middleware('can:delete roles')->name('roles.destroy');
 
-        // Permission Management
-        Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class)->middleware('can:view permissions');
+        // Permission Management (granular)
+        Route::get('/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'index'])->middleware('can:view permissions')->name('permissions.index');
+        Route::get('/permissions/create', [\App\Http\Controllers\Admin\PermissionController::class, 'create'])->middleware('can:create permissions')->name('permissions.create');
+        Route::post('/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'store'])->middleware('can:create permissions')->name('permissions.store');
+        Route::get('/permissions/{permission}/edit', [\App\Http\Controllers\Admin\PermissionController::class, 'edit'])->middleware('can:edit permissions')->name('permissions.edit');
+        Route::patch('/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->middleware('can:edit permissions')->name('permissions.update');
+        Route::delete('/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->middleware('can:delete permissions')->name('permissions.destroy');
     });
 
 });

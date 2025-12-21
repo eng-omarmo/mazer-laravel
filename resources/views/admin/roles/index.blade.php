@@ -29,7 +29,9 @@
                 @endif
 
                 <div class="mb-3">
+                    @can('create roles')
                     <a href="{{ route('admin.roles.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Role</a>
+                    @endcan
                 </div>
 
                 <div class="table-responsive">
@@ -52,14 +54,18 @@
                                     </td>
                                     <td>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                                            @if($role->name !== 'admin')
-                                            <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" onsubmit="return confirm('Delete this role?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                            @endif
+                                            @can('edit roles')
+                                                <a href="{{ route('admin.roles.edit', $role) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                            @endcan
+                                            @can('delete roles')
+                                                @if($role->name !== 'admin')
+                                                <form action="{{ route('admin.roles.destroy', $role) }}" method="POST" onsubmit="return confirm('Delete this role?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                                @endif
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
