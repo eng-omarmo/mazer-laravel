@@ -43,34 +43,24 @@ class MerchantPayService
         return $token;
     }
 
-    public function createTransactionInfo(string $phone, string $amount, string $currency, string $successUrl, string $cancelUrl, array $orderInfo): array
+
+    public function getMerchantInfo(): array
     {
-
         $token = $this->getAccessToken();
-        $payload = [
-            'phone' => $phone,
-            'amount' => $amount,
-            'currency' => $currency,
-            'successUrl' => $successUrl,
-            'cancelUrl' => $cancelUrl,
-            'order_info' => $orderInfo,
-        ];
-
-        $resp = Http::asJson()->withToken($token)->post($this->baseUrl . '/merchant/api/transaction-info', $payload);
+        $resp = Http::asJson()->withToken($token)->post($this->baseUrl . '/merchant/api/v2/merchant-info');
         if (! $resp->successful()) {
-            throw new \RuntimeException('MerchantPay transaction-info failed');
+            throw new \RuntimeException('MerchantPay merchant-info failed');
         }
         return $resp->json();
     }
 
-    public function verifyTransaction(string $uuid): array
+    public function executeTransaction($data): array
     {
-        $token = $this->getAccessToken();
-        $resp = Http::asJson()->withToken($token)->post($this->baseUrl . '/merchant/api/transaction-verify', [
-            'uuid' => $uuid,
+        $resp = Http::asJson()->post($this->baseUrl . '/merchant/api/v2/bulk-pay', [
+            'data' => $data,
         ]);
         if (! $resp->successful()) {
-            throw new \RuntimeException('MerchantPay transaction-verify failed');
+            throw new \RuntimeException('MerchantPay transaction-execute failed');
         }
         return $resp->json();
     }
