@@ -10,9 +10,16 @@ use App\Models\PayrollBatch;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\MerchantPayService;
 
 class PayrollBatchController extends Controller
 {
+
+    protected MerchantPayService $merchantPayService;
+    public function __construct(MerchantPayService $merchantPayService)
+    {
+        $this->merchantPayService = $merchantPayService;
+    }
     public function index(Request $request)
     {
         $query = PayrollBatch::query();
@@ -209,12 +216,20 @@ class PayrollBatchController extends Controller
 
     public function markPaid(PayrollBatch $batch)
     {
+        $data = [];
         $this->authorizeRole(['finance', 'admin']);
         if ($batch->status !== 'approved') {
             return back()->withErrors(['status' => 'Only approved batches can be paid']);
         }
         $walletCredit = 0.0;
         foreach ($batch->payrolls as $p) {
+            $data = [
+                'receiver' => $p->employee->phone,
+                'amount' => $p->salary,
+                'currency' => 1,
+                'payment_method' => 1,
+                'reference' => 'EMP-ID' . $p->id,
+            ];
             if ($p->status !== 'paid') {
                 $repayment = $this->applyAdvanceRepayments($p);
                 $p->update([
@@ -231,7 +246,8 @@ class PayrollBatchController extends Controller
             $wallet->update(['balance' => $wallet->balance + $walletCredit]);
         }
         $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
-
+        $this->merchantPayService->executeTransaction($data);
+        dd($data);
         return back()->with('status', 'Batch marked as paid');
     }
 

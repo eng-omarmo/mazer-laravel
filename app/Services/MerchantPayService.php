@@ -26,12 +26,11 @@ class MerchantPayService
             return $cached;
         }
 
-
         $resp = Http::post($this->baseUrl . '/merchant/api/verify', [
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
         ]);
-
+dd($resp);
         if (! $resp->successful()) {
             throw new \RuntimeException('MerchantPay verify failed');
         }
@@ -43,20 +42,11 @@ class MerchantPayService
         return $token;
     }
 
-
-    public function getMerchantInfo(): array
-    {
-        $token = $this->getAccessToken();
-        $resp = Http::asJson()->withToken($token)->post($this->baseUrl . '/merchant/api/v2/merchant-info');
-        if (! $resp->successful()) {
-            throw new \RuntimeException('MerchantPay merchant-info failed');
-        }
-        return $resp->json();
-    }
-
     public function executeTransaction($data): array
     {
-        $resp = Http::asJson()->post($this->baseUrl . '/merchant/api/v2/bulk-pay', [
+
+        $token = $this->getAccessToken();
+        $resp = Http::asJson()->withToken($token)->post($this->baseUrl . '/merchant/api/v2/bulk-pay', [
             'data' => $data,
         ]);
         if (! $resp->successful()) {
