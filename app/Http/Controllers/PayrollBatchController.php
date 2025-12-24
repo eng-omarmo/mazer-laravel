@@ -216,7 +216,7 @@ class PayrollBatchController extends Controller
 
     public function markPaid(PayrollBatch $batch)
     {
-        $data = [];
+
         $this->authorizeRole(['finance', 'admin']);
         if ($batch->status !== 'approved') {
             return back()->withErrors(['status' => 'Only approved batches can be paid']);
@@ -225,11 +225,11 @@ class PayrollBatchController extends Controller
         foreach ($batch->payrolls as $p) {
             $data = [
                 'receiver' => $p->employee->phone,
-                'amount' => $p->salary,
-                'currency' => 1,
-                'payment_method' => 1,
-                'reference' => 'EMP-ID' . $p->id,
+                'amount' => (float) $p->net_pay,
+                'payment_method' => 'Hormuud',
+                'reference' => 'EMP-' . $p->employee_id . '-PAY-' . $batch->year . '-' . $batch->month,
             ];
+            $this->excute($data);
             if ($p->status !== 'paid') {
                 $repayment = $this->applyAdvanceRepayments($p);
                 $p->update([
@@ -246,9 +246,21 @@ class PayrollBatchController extends Controller
             $wallet->update(['balance' => $wallet->balance + $walletCredit]);
         }
         $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
-        $this->merchantPayService->executeTransaction($data);
-        dd($data);
+
+
         return back()->with('status', 'Batch marked as paid');
+    }
+
+    private function excute($bulkPayments){
+             try {
+            $this->merchantPayService->executeTransaction($bulkPayments);
+        } catch (\Throwable $e) {
+            logger()->error('MerchantPay verify failed', [
+                'userId' => Auth::id(),
+                'exception' => (string) $e,
+            ]);
+            return back()->withErrors(['status' => 'External payment gateway failed']);
+        }
     }
 
     private function applyAdvanceRepayments(Payroll $payroll): array

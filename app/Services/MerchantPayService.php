@@ -10,48 +10,46 @@ class MerchantPayService
     protected string $baseUrl;
     protected string $clientId;
     protected string $clientSecret;
+    protected string $currency;
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('merchantpay.base_url'), '/');
+        $this->baseUrl = rtrim((string) config('merchantpay.base_url'), '/');
         $this->clientId = (string) config('merchantpay.client_id');
         $this->clientSecret = (string) config('merchantpay.client_secret');
+        $this->currency = (string) config('merchantpay.currency', 'USD');
     }
 
-    public function getAccessToken(): string
+    /**
+     * Execute bulk payment transaction
+     *
+     * @param array $payments Each item: ['receiver'=>string,'amount'=>float,'currency'=>string|int,'payment_method'=>int,'reference'=>string]
+     * @return array Decoded JSON response
+     * @throws \RuntimeException on failure response
+     */
+    public function executeTransaction(array $payment): array
     {
-        $cacheKey = 'merchantpay_access_token';
-        $cached = Cache::get($cacheKey);
-        if ($cached) {
-            return $cached;
-        }
-
-        $resp = Http::post($this->baseUrl . '/merchant/api/verify', [
+        $currency = is_numeric($this->currency) ? (int) $this->currency : $this->currency;
+        $payload = [
             'client_id' => $this->clientId,
-            'client_secret' => $this->clientSecret,
-        ]);
-dd($resp);
-        if (! $resp->successful()) {
-            throw new \RuntimeException('MerchantPay verify failed');
-        }
-        $token = (string) data_get($resp->json(), 'data.access_token');
-        if (! $token) {
-            throw new \RuntimeException('MerchantPay token missing');
-        }
-        Cache::put($cacheKey, $token, now()->addMinutes(30));
-        return $token;
-    }
+            'currency' => $currency,
+            'receiver' => $payment['receiver'],
+            'amount' => $payment['amount'],
+            'currency' => $payment['currency'],
+            'payment_method' => $data['payment_method'],
+            'reference' => $payment['reference'],
+        ];
 
-    public function executeTransaction($data): array
-    {
+        $response = Http::timeout(15)->retry(2, 500)->asJson()->post($this->baseUrl . '/api/v2/bulk-pay', $payload);
 
-        $token = $this->getAccessToken();
-        $resp = Http::asJson()->withToken($token)->post($this->baseUrl . '/merchant/api/v2/bulk-pay', [
-            'data' => $data,
-        ]);
-        if (! $resp->successful()) {
-            throw new \RuntimeException('MerchantPay transaction-execute failed');
+        if (! $response->successful()) {
+            logger()->error('MerchantPay bulk-pay error', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+            throw new \RuntimeException('MerchantPay bulk-pay failed: status=' . $response->status() . ' body=' . $response->body());
         }
-        return $resp->json();
+
+        return (array) $response->json();
     }
 }
