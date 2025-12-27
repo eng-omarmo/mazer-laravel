@@ -186,15 +186,12 @@ class PayrollBatchController extends Controller
 
     public function approve(PayrollBatch $batch)
     {
+
         $this->authorizeRole(['hrm', 'admin']);
         if ($batch->status !== 'submitted') {
             return back()->withErrors(['status' => 'Only submitted batches can be approved']);
         }
-        $wallet = Wallet::main();
-        if ($wallet->balance < ($batch->total_amount ?? 0)) {
-            return back()->withErrors(['status' => 'Insufficient wallet balance']);
-        }
-        $wallet->update(['balance' => $wallet->balance - ($batch->total_amount ?? 0)]);
+
         $batch->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
         foreach ($batch->payrolls as $p) {
             $p->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
@@ -223,13 +220,14 @@ class PayrollBatchController extends Controller
         }
         $walletCredit = 0.0;
         foreach ($batch->payrolls as $p) {
+
             $data = [
-                'receiver' => $p->employee->phone,
+                'receiver' => $p->employee->account_number,
                 'amount' => (float) $p->net_pay,
                 'payment_method' => 'Hormuud',
                 'reference' => 'EMP-' . $p->employee_id . '-PAY-' . $batch->year . '-' . $batch->month,
             ];
-            $this->excute($data);
+               $this->merchantPayService->executeTransaction($data);
             if ($p->status !== 'paid') {
                 $repayment = $this->applyAdvanceRepayments($p);
                 $p->update([
@@ -237,6 +235,7 @@ class PayrollBatchController extends Controller
                     'status' => 'paid',
                     'paid_by' => Auth::id(),
                     'paid_at' => now(),
+                    
                 ]);
                 $walletCredit += $repayment['total'];
             }
@@ -251,18 +250,7 @@ class PayrollBatchController extends Controller
         return back()->with('status', 'Batch marked as paid');
     }
 
-    private function excute($bulkPayments)
-    {
-        try {
-            $this->merchantPayService->executeTransaction($bulkPayments);
-        } catch (\Throwable $e) {
-            logger()->error('MerchantPay verify failed', [
-                'userId' => Auth::id(),
-                'exception' => (string) $e,
-            ]);
-            return back()->withErrors(['status' => 'External payment gateway failed']);
-        }
-    }
+
 
     private function applyAdvanceRepayments(Payroll $payroll): array
     {
@@ -324,6 +312,7 @@ class PayrollBatchController extends Controller
 
     public function approveAllPending(Request $request)
     {
+
         // $this->authorizeRole(['Finance', 'Admin']);
         $wallet = Wallet::main();
         $approved = 0;
@@ -353,7 +342,7 @@ class PayrollBatchController extends Controller
 
     public function markPaidAllApproved(Request $request)
     {
-
+        dd($request->all());
         // validate date and year then add that to query
         $request->validate([
             'year' => 'required|integer|min:2020|max:' . date('Y'),

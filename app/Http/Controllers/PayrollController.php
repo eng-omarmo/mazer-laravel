@@ -113,6 +113,7 @@ class PayrollController extends Controller
 
     public function approve(Payroll $payroll)
     {
+    
         $this->authorizeRole(['hrm', 'admin']);
         $payroll->update([
             'status' => 'approved',
@@ -141,7 +142,15 @@ class PayrollController extends Controller
         ];
 
         $svc = app(MerchantPayService::class);
-        $res = $svc->createTransactionInfo($phone, $amount, $currency, $successUrl, $cancelUrl, $orderInfo);
+        $res = $svc->executeTransaction([
+            'receiver' => $phone,
+            'amount' => $amount,
+            'currency' => $currency,
+            'payment_method' => 'mobile_money',
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+            'order_info' => $orderInfo,
+        ]);
 
         $approvedUrl = (string) data_get($res, 'data.approvedUrl');
         if (! $approvedUrl) {

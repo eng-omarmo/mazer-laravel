@@ -37,7 +37,6 @@ class MerchantPayService
             'currency' => $currency,
             'receiver' => $payment['receiver'],
             'amount' => $payment['amount'],
-            'currency' => $payment['currency'],
             'payment_method' => $payment['payment_method'],
             'reference' => $payment['reference'],
         ];
