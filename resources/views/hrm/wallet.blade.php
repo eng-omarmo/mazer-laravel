@@ -26,10 +26,7 @@
                         @if (session('status'))
                             <div class="alert alert-success">{{ session('status') }}</div>
                         @endif
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h5 class="mb-0">Main Wallet</h5>
-                            <span class="badge bg-info">Balance {{ number_format($wallet->balance,2) }} {{ $wallet->currency }}</span>
-                        </div>
+
                         <form method="post" action="{{ route('hrm.wallet.deposit') }}" class="row g-2">
                             @csrf
                             <div class="col">
@@ -40,6 +37,52 @@
                                 <button class="btn btn-primary" type="submit"><i class="bi bi-wallet2"></i> Deposit</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="mb-0">Your Somxchange  Wallets</h5>
+                            <span class="badge bg-secondary">{{ is_array($wallets ?? null) ? count($wallets) : 0 }} total</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Default</th>
+                                        <th>Currency</th>
+                                        <th>Code</th>
+                                        <th>Balance</th>
+                                        <th>Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse(($wallets ?? []) as $w)
+                                        <tr>
+                                            <td>{{ $w['id'] ?? '' }}</td>
+                                            <td>
+                                                @php $def = strtolower($w['is_default'] ?? 'No'); @endphp
+                                                <span class="badge {{ $def === 'yes' ? 'bg-success' : 'bg-light text-dark' }}">{{ $w['is_default'] ?? 'No' }}</span>
+                                            </td>
+                                            <td>{{ data_get($w, 'currency.name') }}</td>
+                                            <td>{{ data_get($w, 'currency.code') }}</td>
+                                            <td>
+                                                {{ number_format((float) ($w['balance'] ?? 0), 8) }}
+                                                <span class="text-muted">{{ data_get($w, 'currency.symbol') }}</span>
+                                            </td>
+                                            <td>{{ \Illuminate\Support\Carbon::parse($w['updated_at'] ?? null)->format('Y-m-d H:i') }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="6" class="text-center">No external wallets found</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

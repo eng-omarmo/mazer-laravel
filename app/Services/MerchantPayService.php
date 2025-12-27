@@ -31,10 +31,11 @@ class MerchantPayService
     public function executeTransaction(array $payment): array
     {
         $configuration = ApiConfiguration::firstOrFail();
-        $currency = is_numeric($this->currency) ? (int) $this->currency : $this->currency;
+
+
         $payload = [
-            'client_id' => $configuration->client_id,
-            'currency' => $currency,
+            'client_id' => $configuration->token,
+            'currency' => 1,
             'receiver' => $payment['receiver'],
             'amount' => $payment['amount'],
             'payment_method' => $payment['payment_method'],
@@ -51,6 +52,23 @@ class MerchantPayService
             throw new \RuntimeException('MerchantPay bulk-pay failed: status=' . $response->status() . ' body=' . $response->body());
         }
 
+        return (array) $response->json();
+    }
+
+
+    public function WalletsInfo(){
+        $configuration = ApiConfiguration::firstOrFail();
+        $response = Http::timeout(15)->retry(2, 500)->asJson()->get($this->baseUrl . '/api/v2/wallets-info', [
+            'client_id' => $configuration->token,
+        ]);
+     
+        if (! $response->successful()) {
+            logger()->error('MerchantPay wallets error', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+            throw new \RuntimeException('MerchantPay wallets failed: status=' . $response->status() . ' body=' . $response->body());
+        }
         return (array) $response->json();
     }
 }

@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Wallet;
 use Illuminate\Http\Request;
-
+use App\Services\MerchantPayService;
 class WalletController extends Controller
 {
+
+    public function __construct(private MerchantPayService $merchantPayService)
+    {
+         $this->merchantPayService = $merchantPayService;
+    }
     public function index()
     {
-        $wallet = Wallet::main();
+        $wallets = $this->merchantPayService->WalletsInfo();
 
-        return view('hrm.wallet', compact('wallet'));
+        return view('hrm.wallet', compact('wallets'));
     }
 
     public function deposit(Request $request)
