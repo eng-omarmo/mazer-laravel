@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ApiConfiguration;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
@@ -16,7 +17,7 @@ class MerchantPayService
     {
         $this->baseUrl = rtrim((string) config('merchantpay.base_url'), '/');
         $this->clientId = (string) config('merchantpay.client_id');
-        $this->clientSecret = (string) config('merchantpay.client_secret');
+
         $this->currency = (string) config('merchantpay.currency', 'USD');
     }
 
@@ -29,9 +30,10 @@ class MerchantPayService
      */
     public function executeTransaction(array $payment): array
     {
+        $configuration = ApiConfiguration::firstOrFail();
         $currency = is_numeric($this->currency) ? (int) $this->currency : $this->currency;
         $payload = [
-            'client_id' => $this->clientId,
+            'client_id' => $configuration->client_id,
             'currency' => $currency,
             'receiver' => $payment['receiver'],
             'amount' => $payment['amount'],

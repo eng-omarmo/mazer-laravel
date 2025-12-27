@@ -199,6 +199,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/permissions/{permission}/edit', [\App\Http\Controllers\Admin\PermissionController::class, 'edit'])->middleware('can:edit permissions')->name('permissions.edit');
         Route::patch('/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->middleware('can:edit permissions')->name('permissions.update');
         Route::delete('/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->middleware('can:delete permissions')->name('permissions.destroy');
+
+        // API Configurations (granular)
+        Route::get('/api-configurations', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'index'])->middleware('can:view api configs')->name('api-configurations.index');
+        Route::get('/api-configurations/create', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'create'])->middleware('can:create api configs')->name('api-configurations.create');
+        Route::post('/api-configurations', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'store'])->middleware('can:create api configs')->name('api-configurations.store');
+        Route::get('/api-configurations/{apiConfiguration}/edit', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'edit'])->middleware('can:edit api configs')->name('api-configurations.edit');
+        Route::patch('/api-configurations/{apiConfiguration}', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'update'])->middleware('can:edit api configs')->name('api-configurations.update');
+        Route::delete('/api-configurations/{apiConfiguration}', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'destroy'])->middleware('can:delete api configs')->name('api-configurations.destroy');
     });
 
 });

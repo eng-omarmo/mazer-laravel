@@ -28,6 +28,11 @@ class RolePermissionSeeder extends Seeder
             'create permissions',
             'edit permissions',
             'delete permissions',
+            // API Configurations
+            'view api configs',
+            'create api configs',
+            'edit api configs',
+            'delete api configs',
             // Employee Management
             'view employees',
             'create employees',

@@ -231,7 +231,7 @@
             </li>
             @endcan
 
-            @canany(['view users', 'view roles', 'view permissions'])
+            @canany(['view users', 'view roles', 'view permissions', 'view api configs'])
             <li class="sidebar-title">Administration</li>
 
             @can('view users')
@@ -265,6 +265,23 @@
                     @can('view permissions')
                     <li class="submenu-item {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}"><a
                             href="{{ route('admin.permissions.index') }}"><i class="bi bi-key"></i> Permissions</a></li>
+                    @endcan
+                </ul>
+            </li>
+            @endcan
+
+            @can('view api configs')
+            <li class="sidebar-item has-sub {{ request()->is('admin/api-configurations*') ? 'active' : '' }}">
+                <a href="#" class="sidebar-link">
+                    <i class="bi bi-gear"></i>
+                    <span>API Configurations</span>
+                </a>
+                <ul class="submenu" style="display: none;">
+                    <li class="submenu-item {{ request()->routeIs('admin.api-configurations.index') ? 'active' : '' }}"><a
+                            href="{{ route('admin.api-configurations.index') }}"><i class="bi bi-card-list"></i> List</a></li>
+                    @can('create api configs')
+                    <li class="submenu-item {{ request()->routeIs('admin.api-configurations.create') ? 'active' : '' }}"><a
+                            href="{{ route('admin.api-configurations.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
                     @endcan
                 </ul>
             </li>

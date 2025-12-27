@@ -251,8 +251,9 @@ class PayrollBatchController extends Controller
         return back()->with('status', 'Batch marked as paid');
     }
 
-    private function excute($bulkPayments){
-             try {
+    private function excute($bulkPayments)
+    {
+        try {
             $this->merchantPayService->executeTransaction($bulkPayments);
         } catch (\Throwable $e) {
             logger()->error('MerchantPay verify failed', [
