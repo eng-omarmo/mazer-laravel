@@ -7,10 +7,10 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
 use App\Models\EmployeeLeave;
-use App\Models\Payroll;
-use App\Models\PayrollBatch;
 use App\Models\Expense;
 use App\Models\ExpensePayment;
+use App\Models\Payroll;
+use App\Models\PayrollBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -27,7 +27,7 @@ class HrmReportsController extends Controller
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('q')) {
-            $needle = '%' . $request->string('q') . '%';
+            $needle = '%'.$request->string('q').'%';
             $query->where(function ($q) use ($needle) {
                 $q->where('first_name', 'like', $needle)->orWhere('last_name', 'like', $needle);
             });
@@ -61,7 +61,7 @@ class HrmReportsController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Name', 'Department', 'Status']);
             foreach ($rows as $e) {
-                fputcsv($out, [$e->first_name . ' ' . $e->last_name, optional($e->department)->name, $e->status]);
+                fputcsv($out, [$e->first_name.' '.$e->last_name, optional($e->department)->name, $e->status]);
             }
             fclose($out);
         });
@@ -78,7 +78,7 @@ class HrmReportsController extends Controller
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('type')) {
-            $query->where('type', 'like', '%' . $request->string('type') . '%');
+            $query->where('type', 'like', '%'.$request->string('type').'%');
         }
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->integer('employee_id'));
@@ -114,7 +114,7 @@ class HrmReportsController extends Controller
             fputcsv($out, ['Employee', 'Type', 'Status', 'Start', 'End', 'Days']);
             foreach ($rows as $l) {
                 $days = $l->start_date && $l->end_date ? $l->end_date->diffInDays($l->start_date) : '';
-                fputcsv($out, [optional($l->employee)->first_name . ' ' . optional($l->employee)->last_name, $l->type, $l->status, $l->start_date, $l->end_date, $days]);
+                fputcsv($out, [optional($l->employee)->first_name.' '.optional($l->employee)->last_name, $l->type, $l->status, $l->start_date, $l->end_date, $days]);
             }
             fclose($out);
         });
@@ -205,7 +205,7 @@ class HrmReportsController extends Controller
 
     public function expenses(Request $request)
     {
-        $query = Expense::with(['supplier','organization']);
+        $query = Expense::with(['supplier', 'organization']);
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
@@ -233,27 +233,39 @@ class HrmReportsController extends Controller
         // Actually paginate executes count and get.
         // Let's re-build query for sums or just use global if performance is concern.
         // Given it's a report, filtered stats are more useful.
-        
+
         $statsQuery = Expense::query();
-        if ($request->filled('status')) $statsQuery->where('status', $request->string('status'));
-        if ($request->filled('payment_status')) $statsQuery->where('payment_status', $request->string('payment_status'));
-        if ($request->filled('organization_id')) $statsQuery->where('organization_id', (int) $request->input('organization_id'));
-        if ($request->filled('supplier_id')) $statsQuery->where('supplier_id', (int) $request->input('supplier_id'));
-        if ($request->filled('from')) $statsQuery->whereDate('created_at', '>=', $request->date('from'));
-        if ($request->filled('to')) $statsQuery->whereDate('created_at', '<=', $request->date('to'));
+        if ($request->filled('status')) {
+            $statsQuery->where('status', $request->string('status'));
+        }
+        if ($request->filled('payment_status')) {
+            $statsQuery->where('payment_status', $request->string('payment_status'));
+        }
+        if ($request->filled('organization_id')) {
+            $statsQuery->where('organization_id', (int) $request->input('organization_id'));
+        }
+        if ($request->filled('supplier_id')) {
+            $statsQuery->where('supplier_id', (int) $request->input('supplier_id'));
+        }
+        if ($request->filled('from')) {
+            $statsQuery->whereDate('created_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $statsQuery->whereDate('created_at', '<=', $request->date('to'));
+        }
 
         $totalAmount = $statsQuery->sum('amount');
-        
+
         // Calculating total paid for filtered expenses is tricky because payments are in related table.
         // We can use a join or whereHas.
         // Simple approximation: Sum of amounts of expenses * (if fully paid). But partials exist.
         // Correct way: Sum of approved payments for these expenses.
-        
+
         $expenseIds = $statsQuery->pluck('id');
         $totalPaid = ExpensePayment::whereIn('expense_id', $expenseIds)->where('status', 'approved')->sum('amount');
-        
+
         $totalRemaining = max(0.0, $totalAmount - $totalPaid);
-        
+
         $monthly = Expense::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as ym, SUM(amount) as total')
             ->groupBy('ym')->orderByDesc('ym')->limit(12)->get();
 
@@ -265,13 +277,25 @@ class HrmReportsController extends Controller
 
     public function expensesCsv(Request $request): StreamedResponse
     {
-        $query = Expense::with(['supplier','organization']);
-        if ($request->filled('status')) $query->where('status', $request->string('status'));
-        if ($request->filled('payment_status')) $query->where('payment_status', $request->string('payment_status'));
-        if ($request->filled('organization_id')) $query->where('organization_id', (int) $request->input('organization_id'));
-        if ($request->filled('supplier_id')) $query->where('supplier_id', (int) $request->input('supplier_id'));
-        if ($request->filled('from')) $query->whereDate('created_at', '>=', $request->date('from'));
-        if ($request->filled('to')) $query->whereDate('created_at', '<=', $request->date('to'));
+        $query = Expense::with(['supplier', 'organization']);
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->string('payment_status'));
+        }
+        if ($request->filled('organization_id')) {
+            $query->where('organization_id', (int) $request->input('organization_id'));
+        }
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', (int) $request->input('supplier_id'));
+        }
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->date('to'));
+        }
 
         $rows = $query->orderByDesc('created_at')->get();
         $response = new StreamedResponse(function () use ($rows) {
@@ -287,7 +311,7 @@ class HrmReportsController extends Controller
                     $x->status,
                     $x->payment_status,
                     optional($x->supplier)->name,
-                    optional($x->organization)->name
+                    optional($x->organization)->name,
                 ]);
             }
             fclose($out);
@@ -301,7 +325,7 @@ class HrmReportsController extends Controller
     public function payments(Request $request)
     {
         $query = ExpensePayment::with(['expense.supplier', 'expense.organization', 'expense']);
-        
+
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
@@ -312,29 +336,35 @@ class HrmReportsController extends Controller
             $query->whereDate('paid_at', '<=', $request->date('to'));
         }
         if ($request->filled('organization_id')) {
-            $query->whereHas('expense', function($q) use ($request) {
+            $query->whereHas('expense', function ($q) use ($request) {
                 $q->where('organization_id', (int) $request->input('organization_id'));
             });
         }
         if ($request->filled('supplier_id')) {
-             $query->whereHas('expense', function($q) use ($request) {
+            $query->whereHas('expense', function ($q) use ($request) {
                 $q->where('supplier_id', (int) $request->input('supplier_id'));
             });
         }
 
         $items = $query->orderByDesc('paid_at')->paginate(20)->appends($request->query());
-        
+
         $statsQuery = ExpensePayment::query();
-        if ($request->filled('status')) $statsQuery->where('status', $request->string('status'));
-        if ($request->filled('from')) $statsQuery->whereDate('paid_at', '>=', $request->date('from'));
-        if ($request->filled('to')) $statsQuery->whereDate('paid_at', '<=', $request->date('to'));
+        if ($request->filled('status')) {
+            $statsQuery->where('status', $request->string('status'));
+        }
+        if ($request->filled('from')) {
+            $statsQuery->whereDate('paid_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $statsQuery->whereDate('paid_at', '<=', $request->date('to'));
+        }
         if ($request->filled('organization_id')) {
-            $statsQuery->whereHas('expense', function($q) use ($request) {
+            $statsQuery->whereHas('expense', function ($q) use ($request) {
                 $q->where('organization_id', (int) $request->input('organization_id'));
             });
         }
         if ($request->filled('supplier_id')) {
-             $statsQuery->whereHas('expense', function($q) use ($request) {
+            $statsQuery->whereHas('expense', function ($q) use ($request) {
                 $q->where('supplier_id', (int) $request->input('supplier_id'));
             });
         }
@@ -352,16 +382,22 @@ class HrmReportsController extends Controller
     public function paymentsCsv(Request $request): StreamedResponse
     {
         $query = ExpensePayment::with(['expense.supplier', 'expense.organization', 'expense']);
-        if ($request->filled('status')) $query->where('status', $request->string('status'));
-        if ($request->filled('from')) $query->whereDate('paid_at', '>=', $request->date('from'));
-        if ($request->filled('to')) $query->whereDate('paid_at', '<=', $request->date('to'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('from')) {
+            $query->whereDate('paid_at', '>=', $request->date('from'));
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('paid_at', '<=', $request->date('to'));
+        }
         if ($request->filled('organization_id')) {
-            $query->whereHas('expense', function($q) use ($request) {
+            $query->whereHas('expense', function ($q) use ($request) {
                 $q->where('organization_id', (int) $request->input('organization_id'));
             });
         }
         if ($request->filled('supplier_id')) {
-             $query->whereHas('expense', function($q) use ($request) {
+            $query->whereHas('expense', function ($q) use ($request) {
                 $q->where('supplier_id', (int) $request->input('supplier_id'));
             });
         }
@@ -378,7 +414,7 @@ class HrmReportsController extends Controller
                     $p->status,
                     $p->expense_id,
                     optional($p->expense->supplier)->name,
-                    optional($p->expense->organization)->name
+                    optional($p->expense->organization)->name,
                 ]);
             }
             fclose($out);

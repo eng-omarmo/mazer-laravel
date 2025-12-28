@@ -8,18 +8,19 @@ use App\Models\EmployeeAdvance;
 use App\Models\Payroll;
 use App\Models\PayrollBatch;
 use App\Models\Wallet;
+use App\Services\MerchantPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\MerchantPayService;
 
 class PayrollBatchController extends Controller
 {
-
     protected MerchantPayService $merchantPayService;
+
     public function __construct(MerchantPayService $merchantPayService)
     {
         $this->merchantPayService = $merchantPayService;
     }
+
     public function index(Request $request)
     {
         $query = PayrollBatch::query();
@@ -46,6 +47,7 @@ class PayrollBatchController extends Controller
         if ($preview) {
             $employees = Employee::where('status', 'active')->orderBy('first_name')->orderBy('last_name')->get();
         }
+
         return view('hrm.payroll-post', compact('year', 'month', 'preview', 'employees'));
     }
 
@@ -104,7 +106,7 @@ class PayrollBatchController extends Controller
                 'net_pay' => $net,
                 'advance_deduction' => $plannedAdv,
                 'status' => 'draft',
-                ''
+                '',
             ]);
             $totalEmployees++;
             $totalAmount += $net;
@@ -156,6 +158,7 @@ class PayrollBatchController extends Controller
             $sumInstallments = $advances->sum(function ($a) {
                 $rem = (float) ($a->remaining_balance ?? $a->amount);
                 $inst = (float) ($a->installment_amount ?? $rem);
+
                 return min($inst, $rem);
             });
             $plannedAdv = min($plannedAdv, $sumInstallments, $remainingTotal, $net);
@@ -220,14 +223,13 @@ class PayrollBatchController extends Controller
         }
         $walletCredit = 0.0;
         foreach ($batch->payrolls as $p) {
-
             $data = [
                 'receiver' => $p->employee->account_number,
                 'amount' => (float) $p->net_pay,
-                'payment_method' => 'Hormuud',
-                'reference' => 'EMP-' . $p->employee_id . '-PAY-' . $batch->year . '-' . $batch->month,
+                'payment_method' => $p->account_provider,
+                'reference' => 'EMP-'.$p->employee_id.'-PAY-'.$batch->year.'-'.$batch->month,
             ];
-               $this->merchantPayService->executeTransaction($data);
+            $this->merchantPayService->executeTransaction($data);
             if ($p->status !== 'paid') {
                 $repayment = $this->applyAdvanceRepayments($p);
                 $p->update([
@@ -235,7 +237,7 @@ class PayrollBatchController extends Controller
                     'status' => 'paid',
                     'paid_by' => Auth::id(),
                     'paid_at' => now(),
-                    
+
                 ]);
                 $walletCredit += $repayment['total'];
             }
@@ -246,11 +248,8 @@ class PayrollBatchController extends Controller
         }
         $batch->update(['status' => 'paid', 'paid_by' => Auth::id(), 'paid_at' => now()]);
 
-
         return back()->with('status', 'Batch marked as paid');
     }
-
-
 
     private function applyAdvanceRepayments(Payroll $payroll): array
     {
@@ -345,7 +344,7 @@ class PayrollBatchController extends Controller
         dd($request->all());
         // validate date and year then add that to query
         $request->validate([
-            'year' => 'required|integer|min:2020|max:' . date('Y'),
+            'year' => 'required|integer|min:2020|max:'.date('Y'),
             'month' => 'required|integer|min:1|max:12',
         ]);
         $this->authorizeRole(['finance', 'admin']);

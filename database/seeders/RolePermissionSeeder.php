@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -246,7 +246,7 @@ class RolePermissionSeeder extends Seeder
 
             $newRole = $roleMap[$oldRole] ?? 'employee';
 
-            if (!$user->hasRole($newRole)) {
+            if (! $user->hasRole($newRole)) {
                 $user->assignRole($newRole);
             }
         }

@@ -12,12 +12,14 @@ class UserController extends Controller
     public function index()
     {
         $users = User::orderBy('name')->paginate(10);
+
         return view('admin.users', compact('users'));
     }
 
     public function create()
     {
         $roles = Role::all();
+
         return view('admin.users-create', compact('roles'));
     }
 
@@ -34,7 +36,7 @@ class UserController extends Controller
 
         $role = Role::find($validated['role']);
 
-        $user =   User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
@@ -42,9 +44,8 @@ class UserController extends Controller
             'role' => $role->name,
             'password' => Hash::make($validated['password']),
         ]);
-        //assign role to user
+        // assign role to user
         $user->assignRole($role->name);
-
 
         return redirect()->route('admin.users.index')->with('status', 'User created');
     }
@@ -60,7 +61,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:30'],
             'position' => ['nullable', 'string', 'max:100'],
             'role' => ['required', 'exists:roles,id'],
@@ -76,7 +77,7 @@ class UserController extends Controller
             'position' => $validated['position'] ?? null,
             'role' => $role->name,
         ];
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $update['password'] = Hash::make($validated['password']);
         }
         $user->update($update);

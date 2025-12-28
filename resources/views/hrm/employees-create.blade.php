@@ -74,6 +74,16 @@
                             @error('account_number')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label class="form-label">Account Provider</label>
+                            <select name="account_provider" class="form-select">
+                                <option value="">Select provider</option>
+                                @foreach(['somtel','hormuud','wallet'] as $p)
+                                    <option value="{{ $p }}" {{ old('account_provider')===$p?'selected':'' }}>{{ ucfirst($p) }}</option>
+                                @endforeach
+                            </select>
+                            @error('account_provider')<small class="text-danger">{{ $message }}</small>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Organization</label>
                             <select name="organization_id" class="form-select">
                                 <option value="">None</option>

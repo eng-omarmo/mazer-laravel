@@ -25,6 +25,7 @@ Route::get('/dashboard', function () {
         }
 
     }
+
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -129,7 +130,6 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/expenses/payments/{payment}/approve', [\App\Http\Controllers\ExpenseController::class, 'approvePayment'])->middleware('can:pay expenses')->name('expense-payments.approve');
         Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->middleware('can:pay expenses')->name('expense-payments.reject');
-
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->middleware('can:view payroll batches')->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->middleware('can:create payroll batches')->name('payroll.batches.create');

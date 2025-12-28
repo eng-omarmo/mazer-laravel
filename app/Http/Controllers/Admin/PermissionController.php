@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
 use App\Models\ActivityLog;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
     public function index()
     {
         $permissions = Permission::orderBy('name')->paginate(15);
+
         return view('admin.permissions.index', compact('permissions'));
     }
 
@@ -47,7 +48,7 @@ class PermissionController extends Controller
     public function update(Request $request, Permission $permission)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'unique:permissions,name,' . $permission->id, 'max:255'],
+            'name' => ['required', 'string', 'unique:permissions,name,'.$permission->id, 'max:255'],
         ]);
 
         $oldName = $permission->name;
@@ -59,7 +60,7 @@ class PermissionController extends Controller
             'meta' => [
                 'permission_id' => $permission->id,
                 'old_name' => $oldName,
-                'new_name' => $permission->name
+                'new_name' => $permission->name,
             ],
             'ip' => $request->ip(),
         ]);

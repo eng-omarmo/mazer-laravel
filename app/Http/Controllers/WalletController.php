@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Wallet;
-use Illuminate\Http\Request;
 use App\Services\MerchantPayService;
+use Illuminate\Http\Request;
+
 class WalletController extends Controller
 {
-
     public function __construct(private MerchantPayService $merchantPayService)
     {
-         $this->merchantPayService = $merchantPayService;
+        $this->merchantPayService = $merchantPayService;
     }
+
     public function index()
     {
         $wallets = $this->merchantPayService->WalletsInfo();

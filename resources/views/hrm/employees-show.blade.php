@@ -78,6 +78,10 @@
                         <strong>Account Number:</strong>
                         <div>{{ $employee->account_number ?? '-' }}</div>
                     </div>
+                    <div class="col-md-6">
+                        <strong>Account Provider:</strong>
+                        <div>{{ $employee->account_provider ? ucfirst($employee->account_provider) : '-' }}</div>
+                    </div>
                 </div>
 
                 <hr class="my-4">

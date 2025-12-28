@@ -6,10 +6,9 @@ use App\Models\AdvanceTransaction;
 use App\Models\Employee;
 use App\Models\EmployeeAdvance;
 use App\Models\Payroll;
-use App\Models\Wallet;
+use App\Services\MerchantPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\MerchantPayService;
 
 class PayrollController extends Controller
 {
@@ -113,7 +112,7 @@ class PayrollController extends Controller
 
     public function approve(Payroll $payroll)
     {
-    
+
         $this->authorizeRole(['hrm', 'admin']);
         $payroll->update([
             'status' => 'approved',
@@ -137,8 +136,8 @@ class PayrollController extends Controller
         $successUrl = route('hrm.payroll.index');
         $cancelUrl = route('hrm.payroll.index');
         $orderInfo = [
-            'item_name' => 'Payroll ' . $payroll->year . '-' . str_pad($payroll->month, 2, '0', STR_PAD_LEFT),
-            'order_no' => 'PAY-' . $payroll->id . '-' . now()->format('YmdHis'),
+            'item_name' => 'Payroll '.$payroll->year.'-'.str_pad($payroll->month, 2, '0', STR_PAD_LEFT),
+            'order_no' => 'PAY-'.$payroll->id.'-'.now()->format('YmdHis'),
         ];
 
         $svc = app(MerchantPayService::class);
@@ -184,6 +183,7 @@ class PayrollController extends Controller
                 if ($adv->status !== 'paid') {
                     $adv->update(['status' => 'paid']);
                 }
+
                 continue;
             }
             $installment = (float) ($adv->installment_amount ?: $remaining);

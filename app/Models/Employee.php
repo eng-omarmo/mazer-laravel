@@ -25,6 +25,7 @@ class Employee extends Model
         'hire_date',
         'status',
         'account_number',
+        'account_provider',
     ];
 
     public function documents()

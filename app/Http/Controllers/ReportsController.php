@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EmployeeAdvance;
 use App\Models\Employee;
+use App\Models\EmployeeAdvance;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -47,9 +47,9 @@ class ReportsController extends Controller
         $response = new StreamedResponse(function () use ($rows, $request) {
             $out = fopen('php://output', 'w');
             $title = 'Employee Advances';
-            if ($request->filled('employee_id') && $rows->count()>0) {
+            if ($request->filled('employee_id') && $rows->count() > 0) {
                 $emp = optional($rows->first()->employee);
-                fputcsv($out, ["Employee", $emp->first_name.' '.$emp->last_name, $emp->email ?? '']);
+                fputcsv($out, ['Employee', $emp->first_name.' '.$emp->last_name, $emp->email ?? '']);
             }
             fputcsv($out, ['Date', 'Employee', 'Original Amount', 'Remaining', 'Next Due', 'Status']);
             $totalRemaining = 0.0;

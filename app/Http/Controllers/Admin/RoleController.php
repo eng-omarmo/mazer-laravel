@@ -3,23 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use App\Models\ActivityLog;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
     public function index()
     {
         $roles = Role::orderBy('name')->paginate(10);
+
         return view('admin.roles.index', compact('roles'));
     }
 
     public function create()
     {
         $permissions = Permission::orderBy('name')->get();
+
         return view('admin.roles.create', compact('permissions'));
     }
 
@@ -33,7 +35,7 @@ class RoleController extends Controller
 
         $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
 
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             $role->syncPermissions($validated['permissions']);
         }
 
@@ -51,13 +53,14 @@ class RoleController extends Controller
     {
         $permissions = Permission::orderBy('name')->get();
         $rolePermissions = $role->permissions->pluck('id')->toArray();
+
         return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     public function update(Request $request, Role $role)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'unique:roles,name,' . $role->id, 'max:255'],
+            'name' => ['required', 'string', 'unique:roles,name,'.$role->id, 'max:255'],
             'permissions' => ['array'],
             'permissions.*' => ['exists:permissions,id'],
         ]);
@@ -76,7 +79,7 @@ class RoleController extends Controller
                 'role_id' => $role->id,
                 'old_name' => $oldName,
                 'new_name' => $role->name,
-                'permissions' => $validated['permissions'] ?? []
+                'permissions' => $validated['permissions'] ?? [],
             ],
             'ip' => $request->ip(),
         ]);

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
-use App\Models\Supplier;
+use App\Models\ExpensePayment;
 use App\Models\Organization;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ExpensePayment;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -60,7 +60,7 @@ class ExpenseController extends Controller
         $docPath = null;
         if ($request->hasFile('upload_document')) {
             $file = $request->file('upload_document');
-            $name = 'expense_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $name = 'expense_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $docPath = Storage::disk('public')->putFileAs('expense_docs', $file, $name);
         }
 
@@ -98,7 +98,7 @@ class ExpenseController extends Controller
         $docPath = $expense->document_path;
         if ($request->hasFile('upload_document')) {
             $file = $request->file('upload_document');
-            $name = 'expense_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $name = 'expense_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $docPath = Storage::disk('public')->putFileAs('expense_docs', $file, $name);
         }
 
@@ -168,7 +168,7 @@ class ExpenseController extends Controller
         $remaining = $expense->remaining();
         $amount = (float) $validated['amount'];
         if ($amount > $remaining) {
-            return back()->withErrors(['amount' => 'Amount exceeds remaining balance (' . number_format($remaining, 2) . ')']);
+            return back()->withErrors(['amount' => 'Amount exceeds remaining balance ('.number_format($remaining, 2).')']);
         }
 
         ExpensePayment::create([
@@ -179,8 +179,7 @@ class ExpenseController extends Controller
             'note' => $validated['note'] ?? null,
             'status' => 'pending',
         ]);
-        //update
-
+        // update
 
         return back()->with('status', 'Payment recorded, pending approval');
     }
@@ -188,6 +187,7 @@ class ExpenseController extends Controller
     public function pendingExpensePayments()
     {
         $payments = ExpensePayment::where('status', 'pending')->with('expense')->paginate(10);
+
         return view('hrm.expense-payments-pending', compact('payments'));
     }
 

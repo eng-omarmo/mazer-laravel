@@ -24,6 +24,7 @@ class PayrollBatch extends Model
         'rejected_by',
         'rejected_at',
     ];
+
     protected $casts = [
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',

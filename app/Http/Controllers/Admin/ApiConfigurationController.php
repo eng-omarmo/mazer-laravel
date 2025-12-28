@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\ApiConfiguration;
 use Illuminate\Http\Request;
-use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 
 class ApiConfigurationController extends Controller
@@ -13,6 +13,7 @@ class ApiConfigurationController extends Controller
     public function index()
     {
         $configs = ApiConfiguration::orderByDesc('created_at')->paginate(10);
+
         return view('admin.api-configurations.index', compact('configs'));
     }
 
@@ -47,7 +48,7 @@ class ApiConfigurationController extends Controller
     public function update(Request $request, ApiConfiguration $apiConfiguration)
     {
         $validated = $request->validate([
-            'token' => ['required', 'string', 'max:255', 'unique:api_configurations,token,' . $apiConfiguration->id],
+            'token' => ['required', 'string', 'max:255', 'unique:api_configurations,token,'.$apiConfiguration->id],
         ]);
 
         $apiConfiguration->update($validated);
