@@ -223,13 +223,18 @@ class PayrollBatchController extends Controller
         }
         $walletCredit = 0.0;
         foreach ($batch->payrolls as $p) {
+
             $data = [
                 'receiver' => $p->employee->account_number,
                 'amount' => (float) $p->net_pay,
-                'payment_method' => $p->account_provider,
+                'payment_method' => $p->employee->account_provider,
                 'reference' => 'EMP-'.$p->employee_id.'-PAY-'.$batch->year.'-'.$batch->month,
             ];
-            $this->merchantPayService->executeTransaction($data);
+            $response = $this->merchantPayService->executeTransaction($data);
+            if($response['status'] == false) {
+                return back()->withErrors(['status' => $response['message']]);
+            }
+
             if ($p->status !== 'paid') {
                 $repayment = $this->applyAdvanceRepayments($p);
                 $p->update([

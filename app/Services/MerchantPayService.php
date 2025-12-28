@@ -34,6 +34,7 @@ class MerchantPayService
     {
         $configuration = ApiConfiguration::firstOrFail();
 
+
         $payload = [
             'client_id' => $configuration->token,
             'currency' => 1,
