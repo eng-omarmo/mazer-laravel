@@ -28,7 +28,7 @@ class PermissionSeeder extends Seeder
             'view employees', 'create employees', 'edit employees', 'delete employees',
 
             // HRM - Documents
-            'view documents', 'verify documents',
+            'view documents', 'verify documents', 'approve documents', 'reject documents',
 
             // HRM - Leaves
             'view leaves', 'create leaves', 'edit leaves', 'approve leaves',
@@ -76,7 +76,7 @@ class PermissionSeeder extends Seeder
             'view organizations', 'create organizations', 'edit organizations',
             'view departments', 'create departments', 'edit departments',
             'view employees', 'create employees', 'edit employees',
-            'view documents', 'verify documents',
+            'view documents', 'verify documents', 'approve documents','reject documents',
             'view leaves', 'create leaves', 'edit leaves', 'approve leaves',
             'view payroll', 'create payroll', 'process payroll',
             'view advances', 'create advances', 'edit advances', 'approve advances',

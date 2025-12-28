@@ -23,7 +23,6 @@ Route::get('/dashboard', function () {
         if (\App\Models\PayrollBatch::where('status', 'submitted')->exists()) {
             session()->flash('status', 'Payroll approval waiting');
         }
-
     }
 
     return view('dashboard');
@@ -171,7 +170,6 @@ Route::middleware('auth')->group(function () {
             Route::patch('/organizations/{organization}', [\App\Http\Controllers\OrganizationController::class, 'update'])->middleware('can:edit organizations')->name('organizations.update');
             Route::delete('/organizations/{organization}', [\App\Http\Controllers\OrganizationController::class, 'destroy'])->middleware('can:delete organizations')->name('organizations.destroy');
         });
-
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -208,7 +206,6 @@ Route::middleware('auth')->group(function () {
         Route::patch('/api-configurations/{apiConfiguration}', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'update'])->middleware('can:edit api configs')->name('api-configurations.update');
         Route::delete('/api-configurations/{apiConfiguration}', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'destroy'])->middleware('can:delete api configs')->name('api-configurations.destroy');
     });
-
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
