@@ -221,6 +221,7 @@ class PayrollBatchController extends Controller
         if ($batch->status !== 'approved') {
             return back()->withErrors(['status' => 'Only approved batches can be paid']);
         }
+
         $walletCredit = 0.0;
         foreach ($batch->payrolls as $p) {
 
@@ -230,8 +231,10 @@ class PayrollBatchController extends Controller
                 'payment_method' => $p->employee->account_provider,
                 'reference' => 'EMP-'.$p->employee_id.'-PAY-'.$batch->year.'-'.$batch->month,
             ];
+
             $response = $this->merchantPayService->executeTransaction($data);
-            if($response['status'] == false) {
+
+            if ($response['status'] == false) {
                 return back()->withErrors(['status' => $response['message']]);
             }
 

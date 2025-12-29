@@ -32,8 +32,8 @@ class MerchantPayService
      */
     public function executeTransaction(array $payment): array
     {
-        $configuration = ApiConfiguration::firstOrFail();
 
+        $configuration = ApiConfiguration::firstOrFail();
 
         $payload = [
             'client_id' => $configuration->token,
@@ -45,6 +45,7 @@ class MerchantPayService
         ];
 
         $response = Http::timeout(15)->retry(2, 500)->asJson()->post($this->baseUrl.'/api/v2/bulk-pay', $payload);
+
 
         if (! $response->successful()) {
             logger()->error('MerchantPay bulk-pay error', [
