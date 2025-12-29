@@ -126,37 +126,21 @@ class PayrollController extends Controller
     public function markPaid(Payroll $payroll)
     {
         $this->authorizeRole(['finance', 'admin']);
-        $employee = $payroll->employee;
-        $phone = (string) ($employee->reference_phone ?? $employee->account_number ?? '');
-        if ($phone === '') {
-            return back()->withErrors(['phone' => 'Employee phone/account is required to initialize payment']);
-        }
-        $amount = number_format((float) $payroll->net_pay, 2, '.', '');
-        $currency = (string) config('merchantpay.currency', 'USD');
-        $successUrl = route('hrm.payroll.index');
-        $cancelUrl = route('hrm.payroll.index');
-        $orderInfo = [
-            'item_name' => 'Payroll '.$payroll->year.'-'.str_pad($payroll->month, 2, '0', STR_PAD_LEFT),
-            'order_no' => 'PAY-'.$payroll->id.'-'.now()->format('YmdHis'),
+        $svc = app(MerchantPayService::class);
+        $data = [
+            'receiver' => $payroll->employee->account_number,
+            'amount' => number_format((float) $payroll->net_pay, 2, '.', ''),
+            'currency' => 1,
+            'payment_method' => $payroll->employee->account_provider,
+            'reference' => 'PAY-' . $payroll->id . '-' . now()->format('YmdHis'),
         ];
 
-        $svc = app(MerchantPayService::class);
-        $res = $svc->executeTransaction([
-            'receiver' => $phone,
-            'amount' => $amount,
-            'currency' => $currency,
-            'payment_method' => 'mobile_money',
-            'success_url' => $successUrl,
-            'cancel_url' => $cancelUrl,
-            'order_info' => $orderInfo,
-        ]);
-
-        $approvedUrl = (string) data_get($res, 'data.approvedUrl');
-        if (! $approvedUrl) {
-            return back()->withErrors(['payment' => 'Unable to initialize payment']);
+        $res = $svc->executeTransaction($data);
+        dd($res);
+        if ($res['status'] == false) {
+            return back()->with('error', $res['message']);
         }
-
-        return redirect()->away($approvedUrl);
+        return redirect()->back()->with('success', 'Payroll marked as paid');
     }
 
     private function applyAdvanceRepayments(Payroll $payroll): array
