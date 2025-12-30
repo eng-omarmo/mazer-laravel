@@ -30,8 +30,6 @@
 
                 <form method="post" action="{{ route('hrm.employees.store') }}" enctype="multipart/form-data">
                     @csrf
-
-
                     {{-- ================================
                         SECTION 1 — PERSONAL INFORMATION
                     ================================= --}}
@@ -77,8 +75,8 @@
                             <label class="form-label">Account Provider</label>
                             <select name="account_provider" class="form-select">
                                 <option value="">Select provider</option>
-                                @foreach(['somtel','hormuud','wallet'] as $p)
-                                    <option value="{{ $p }}" {{ old('account_provider')===$p?'selected':'' }}>{{ ucfirst($p) }}</option>
+                                @foreach(['somtel','hormuud','PremierWallet'] as $p)
+                                <option value="{{ $p }}" {{ old('account_provider')===$p?'selected':'' }}>{{ ucfirst($p) }}</option>
                                 @endforeach
                             </select>
                             @error('account_provider')<small class="text-danger">{{ $message }}</small>@enderror
@@ -88,7 +86,7 @@
                             <select name="organization_id" class="form-select">
                                 <option value="">None</option>
                                 @foreach($organizations as $org)
-                                    <option value="{{ $org->id }}" {{ (string)old('organization_id')===(string)$org->id?'selected':'' }}>{{ $org->name }}</option>
+                                <option value="{{ $org->id }}" {{ (string)old('organization_id')===(string)$org->id?'selected':'' }}>{{ $org->name }}</option>
                                 @endforeach
                             </select>
                             @error('organization_id')<small class="text-danger">{{ $message }}</small>@enderror
