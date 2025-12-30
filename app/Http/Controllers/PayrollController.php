@@ -136,7 +136,7 @@ class PayrollController extends Controller
         ];
 
         $res = $svc->executeTransaction($data);
-        dd($res);
+
         if ($res['status'] == false) {
             return back()->with('error', $res['message']);
         }
