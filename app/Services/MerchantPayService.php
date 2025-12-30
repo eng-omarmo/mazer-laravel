@@ -46,7 +46,6 @@ class MerchantPayService
 
         $response = Http::timeout(15)->retry(2, 500)->asJson()->post($this->baseUrl.'/api/v2/bulk-pay', $payload);
 
-
         if (! $response->successful()) {
             logger()->error('MerchantPay bulk-pay error', [
                 'status' => $response->status(),

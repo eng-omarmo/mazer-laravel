@@ -132,7 +132,7 @@ class PayrollController extends Controller
             'amount' => number_format((float) $payroll->net_pay, 2, '.', ''),
             'currency' => 1,
             'payment_method' => $payroll->employee->account_provider,
-            'reference' => 'PAY-' . $payroll->id . '-' . now()->format('YmdHis'),
+            'reference' => 'PAY-'.$payroll->id.'-'.now()->format('YmdHis'),
         ];
 
         $res = $svc->executeTransaction($data);
@@ -140,6 +140,7 @@ class PayrollController extends Controller
         if ($res['status'] == false) {
             return back()->with('error', $res['message']);
         }
+
         return redirect()->back()->with('success', 'Payroll marked as paid');
     }
 

@@ -74,7 +74,7 @@
             </li>
             @endcan
 
-            @can('view documents')
+            @can('view verification')
             <li class="sidebar-item has-sub {{ request()->is('hrm/verification') ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
                     <i class="bi bi-check2-square"></i>
@@ -115,9 +115,13 @@
                     @can('create payroll')
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.create') }}"><i class="bi bi-plus-circle"></i> Add</a></li>
+                    @endcan
+                    @can('view payroll batches')
                     <li class="submenu-item {{ request()->is('hrm/payroll/batches*') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.batches.index') }}"><i class="bi bi-collection"></i>
                             Batches</a></li>
+                    @endcan
+                    @can('create payroll batches')
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.batches.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.batches.create', ['preview' => 0]) }}"><i
                                 class="bi bi-upload"></i> Post Payroll</a></li>
@@ -207,7 +211,7 @@
                 </ul>
             </li>
             @endcan
-<!-- 
+            <!--
             @canany(['view suppliers', 'view expenses'])
             <li class="sidebar-item has-sub {{ (request()->is('hrm/suppliers*') || request()->is('hrm/expenses*')) ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
