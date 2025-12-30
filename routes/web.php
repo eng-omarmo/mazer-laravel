@@ -43,7 +43,7 @@ Route::middleware('auth')->group(function () {
             Route::patch('/employees/{employee}', [EmployeeController::class, 'update'])->middleware('can:edit employees')->name('employees.update');
         });
 
-        Route::middleware(['can:view verification'])->group(function () {
+        Route::middleware(['can:view documents'])->group(function () {
             Route::get('/verification', [DocumentVerificationController::class, 'index'])->name('verification.index');
             Route::post('/verification/{document}/approve', [DocumentVerificationController::class, 'approve'])->middleware('can:approve documents')->name('verification.approve');
             Route::post('/verification/{document}/reject', [DocumentVerificationController::class, 'reject'])->middleware('can:reject documents')->name('verification.reject');
