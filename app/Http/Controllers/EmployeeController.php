@@ -125,6 +125,9 @@ class EmployeeController extends Controller
     public function update(Request $request, Employee $employee)
     {
         $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:employees,email,'.$employee->id],
             'department_id' => ['nullable', 'exists:departments,id'],
             'organization_id' => ['nullable', 'exists:organizations,id'],
             'salary' => ['nullable', 'numeric', 'min:0'],
@@ -134,10 +137,17 @@ class EmployeeController extends Controller
             'identity_doc_number' => ['nullable', 'string', 'max:100'],
             'fingerprint_id' => ['nullable', 'string', 'max:100', 'unique:employees,fingerprint_id,'.$employee->id],
             'identity_document' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png'],
+            'cv' => ['nullable', 'file', 'mimes:pdf,doc,docx'],
+            'contract' => ['nullable', 'file', 'mimes:pdf,doc,docx'],
             'account_number' => ['nullable', 'string', 'max:100'],
             'account_provider' => ['nullable', 'string', 'in:somtel,hormuud,wallet'],
+            'position' => ['nullable', 'string', 'max:255'],
+            'hire_date' => ['nullable', 'date'],
         ]);
         $employee->update([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'],
             'department_id' => $validated['department_id'] ?? $employee->department_id,
             'organization_id' => $validated['organization_id'] ?? $employee->organization_id,
             'salary' => $validated['salary'] ?? $employee->salary,
@@ -148,6 +158,8 @@ class EmployeeController extends Controller
             'fingerprint_id' => $validated['fingerprint_id'] ?? $employee->fingerprint_id,
             'account_number' => $validated['account_number'] ?? $employee->account_number,
             'account_provider' => $validated['account_provider'] ?? $employee->account_provider,
+            'position' => $validated['position'] ?? $employee->position,
+            'hire_date' => $validated['hire_date'] ?? $employee->hire_date,
         ]);
 
         if ($request->hasFile('identity_document')) {
@@ -160,6 +172,34 @@ class EmployeeController extends Controller
                 'employee_id' => $employee->id,
                 'type' => 'identity',
                 'path' => $idPath,
+                'status' => 'pending',
+                'uploaded_by' => $uploaderId,
+            ]);
+        }
+        if ($request->hasFile('cv')) {
+            $uploaderId = Auth::id();
+            $dir = 'employee_docs/'.$employee->id;
+            $cvFile = $request->file('cv');
+            $cvName = 'cv_'.time().'.'.$cvFile->getClientOriginalExtension();
+            $cvPath = Storage::disk('public')->putFileAs($dir, $cvFile, $cvName);
+            EmployeeDocument::create([
+                'employee_id' => $employee->id,
+                'type' => 'cv',
+                'path' => $cvPath,
+                'status' => 'pending',
+                'uploaded_by' => $uploaderId,
+            ]);
+        }
+        if ($request->hasFile('contract')) {
+            $uploaderId = Auth::id();
+            $dir = 'employee_docs/'.$employee->id;
+            $ctFile = $request->file('contract');
+            $ctName = 'contract_'.time().'.'.$ctFile->getClientOriginalExtension();
+            $ctPath = Storage::disk('public')->putFileAs($dir, $ctFile, $ctName);
+            EmployeeDocument::create([
+                'employee_id' => $employee->id,
+                'type' => 'contract',
+                'path' => $ctPath,
                 'status' => 'pending',
                 'uploaded_by' => $uploaderId,
             ]);
