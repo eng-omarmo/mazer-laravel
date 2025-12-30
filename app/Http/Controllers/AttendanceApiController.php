@@ -20,7 +20,6 @@ class AttendanceApiController extends Controller
         $employee = Employee::where('fingerprint_id', $validated['fingerprint_id'])->first();
         if (! $employee) {
             Log::warning('Attendance sync: fingerprint not mapped', $validated);
-
             return response()->json(['error' => 'Employee not found'], 404);
         }
         $status = 'present';
