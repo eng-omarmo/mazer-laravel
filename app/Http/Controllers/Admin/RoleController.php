@@ -36,7 +36,8 @@ class RoleController extends Controller
         $role = Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
 
         if (! empty($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
+            $perms = Permission::whereIn('id', $validated['permissions'])->get();
+            $role->syncPermissions($perms);
         }
 
         ActivityLog::create([
@@ -69,7 +70,8 @@ class RoleController extends Controller
         $role->update(['name' => $validated['name']]);
 
         if (isset($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
+            $perms = Permission::whereIn('id', $validated['permissions'])->get();
+            $role->syncPermissions($perms);
         }
 
         ActivityLog::create([
