@@ -140,8 +140,13 @@ class PayrollController extends Controller
         if ($res['status'] == false) {
             return back()->with('error', $res['message']);
         }
+        $payroll->update([
+            'status' => 'paid',
+            'paid_by' => Auth::id(),
+            'paid_at' => now(),
+        ]);
 
-        return redirect()->back()->with('success', 'Payroll marked as paid');
+        return redirect()->back()->with('success', $res['message']);
     }
 
     private function applyAdvanceRepayments(Payroll $payroll): array
