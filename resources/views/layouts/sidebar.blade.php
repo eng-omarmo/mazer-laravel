@@ -121,7 +121,7 @@
                             href="{{ route('hrm.payroll.batches.index') }}"><i class="bi bi-collection"></i>
                             Batches</a></li>
                     @endcan
-               -->      <!-- @can('create payroll batches')
+                  <!-- @can('create payroll batches')
                     <li class="submenu-item {{ request()->routeIs('hrm.payroll.batches.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.payroll.batches.create', ['preview' => 0]) }}"><i
                                 class="bi bi-upload"></i> Post Payroll</a></li>
