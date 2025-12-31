@@ -9,6 +9,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\PayrollBatchController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\FingerprintController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
             Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->middleware('can:edit employees')->name('employees.edit');
             Route::patch('/employees/{employee}', [EmployeeController::class, 'update'])->middleware('can:edit employees')->name('employees.update');
+        });
+
+        Route::middleware(['can:edit employees'])->group(function () {
+            Route::get('/fingerprint', [FingerprintController::class, 'show'])->name('fingerprint.show');
+            Route::post('/fingerprint/capture', [FingerprintController::class, 'capture'])->name('fingerprint.capture');
         });
 
         Route::middleware(['can:view documents'])->group(function () {
@@ -187,7 +193,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/roles/create', [\App\Http\Controllers\Admin\RoleController::class, 'create'])->middleware('can:create roles')->name('roles.create');
         Route::post('/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->middleware('can:create roles')->name('roles.store');
         Route::get('/roles/{role}/edit', [\App\Http\Controllers\Admin\RoleController::class, 'edit'])->middleware('can:edit roles')->name('roles.edit');
-        Route::patch('/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->middleware('can:edit roles')->name('roles.update');
+        Route::match(['put','patch'],'/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->middleware('can:edit roles')->name('roles.update');
         Route::delete('/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy'])->middleware('can:delete roles')->name('roles.destroy');
 
         // Permission Management (granular)
@@ -195,7 +201,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/permissions/create', [\App\Http\Controllers\Admin\PermissionController::class, 'create'])->middleware('can:create permissions')->name('permissions.create');
         Route::post('/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'store'])->middleware('can:create permissions')->name('permissions.store');
         Route::get('/permissions/{permission}/edit', [\App\Http\Controllers\Admin\PermissionController::class, 'edit'])->middleware('can:edit permissions')->name('permissions.edit');
-        Route::patch('/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->middleware('can:edit permissions')->name('permissions.update');
+        Route::match(['put','patch'],'/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'update'])->middleware('can:edit permissions')->name('permissions.update');
         Route::delete('/permissions/{permission}', [\App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->middleware('can:delete permissions')->name('permissions.destroy');
 
         // API Configurations (granular)
