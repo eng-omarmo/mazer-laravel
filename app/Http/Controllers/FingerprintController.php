@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Employee;
 use App\Models\BiometricTemplate;
 use App\Models\User;
 use App\Services\BiometricCrypto;
@@ -23,25 +24,30 @@ class FingerprintController extends Controller
 
     public function show(Request $request)
     {
-        return view('hrm.fingerprint');
+        $employees = Employee::orderBy('first_name')->get();
+        return view('hrm.fingerprint', compact('employees'));
     }
 
     public function capture(Request $request)
     {
+
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
+            'employee_id' => ['required', 'exists:employees,id'],
         ]);
-        $user = User::findOrFail((int) $validated['user_id']);
-        // Guard handled via route middleware
+        $employee = Employee::findOrFail((int) $validated['employee_id']);
+
 
         if (! $this->device->handshake()) {
-            return response()->json(['ok' => false, 'error' => 'Device handshake failed'], 503);
+            return redirect()->back()->with('error', 'Device handshake failed');
         }
         try {
+
             $result = $this->device->captureTemplate(3);
+
             $enc = $this->crypto->encrypt($result['template']);
+
             $record = BiometricTemplate::create([
-                'user_id' => $user->id,
+                'employee_id' => $employee->id,
                 'device_sn' => $result['device_sn'],
                 'algorithm' => $result['algorithm'],
                 'dpi' => $result['dpi'],
@@ -52,15 +58,19 @@ class FingerprintController extends Controller
                 'tag' => $enc['tag'],
                 'created_by' => Auth::id(),
             ]);
+
+            // Update the employee's fingerprint_id reference
+            $employee->update(['fingerprint_id' => $record->id]);
+
             ActivityLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'Fingerprint Capture',
-                'meta' => ['user_id' => $user->id, 'template_id' => $record->id, 'quality' => $result['quality']],
+                'meta' => ['employee_id' => $employee->id, 'template_id' => $record->id, 'quality' => $result['quality']],
                 'ip' => $request->ip(),
             ]);
-            return response()->json(['ok' => true, 'template_id' => $record->id]);
+            return redirect()->back()->with('success', 'Fingerprint captured successfully');
         } catch (\Throwable $e) {
-            return response()->json(['ok' => false, 'error' => 'Capture failed'], 500);
+            return redirect()->back()->withErrors(['error' => 'Capture failed']);
         }
     }
 }

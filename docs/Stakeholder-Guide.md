@@ -87,8 +87,8 @@ This guide explains the system purpose, main features, and how stakeholders can 
   - Batch flips to `paid` automatically when all included payrolls are paid.
 
 ### Wallet Funding
-- Go to `Wallet` → enter amount → `Deposit`.
-- Wallet balance updates immediately; no external gateway required now.
+
+- Wallet balance updates immediately; Fetches data from somxchange merchant account.
 
 ## Screenshots – Capture Checklist
 

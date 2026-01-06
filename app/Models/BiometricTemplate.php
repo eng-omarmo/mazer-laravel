@@ -10,7 +10,7 @@ class BiometricTemplate extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'employee_id',
         'device_sn',
         'algorithm',
         'dpi',
@@ -26,9 +26,9 @@ class BiometricTemplate extends Model
         'captured_at' => 'datetime',
     ];
 
-    public function user()
+    public function employee()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Employee::class);
     }
 }
 

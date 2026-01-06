@@ -45,6 +45,7 @@
                     <div class="col-md-2 align-self-end">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
                         <a href="{{ route('hrm.reports.employees.csv') }}" class="btn btn-outline-primary"><i class="bi bi-download"></i></a>
+                        <button class="btn btn-outline-secondary" type="button" onclick="window.print()" title="Print"><i class="bi bi-printer"></i></button>
                     </div>
                 </form>
                 <div class="row mt-3">

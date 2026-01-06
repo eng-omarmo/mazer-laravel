@@ -43,7 +43,7 @@
                         <select name="employee_id" class="form-select">
                             <option value="">All</option>
                             @foreach($employees as $e)
-                                <option value="{{ $e->id }}" {{ request('employee_id')==$e->id?'selected':'' }}>{{ $e->first_name }} {{ $e->last_name }}</option>
+                            <option value="{{ $e->id }}" {{ request('employee_id')==$e->id?'selected':'' }}>{{ $e->first_name }} {{ $e->last_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -52,27 +52,66 @@
                         <select name="organization_id" class="form-select">
                             <option value="">All</option>
                             @foreach($organizations as $org)
-                                <option value="{{ $org->id }}" {{ request('organization_id')==$org->id?'selected':'' }}>{{ $org->name }}</option>
+                            <option value="{{ $org->id }}" {{ request('organization_id')==$org->id?'selected':'' }}>{{ $org->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2 align-self-end">
+                    <div class="col-md-3 align-self-end d-flex gap-2">
                         <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+                        <a href="{{ route('hrm.reports.payroll.csv', request()->query()) }}" class="btn btn-outline-success" title="Export Excel"><i class="bi bi-file-earmark-excel"></i></a>
                     </div>
                 </form>
                 <div class="row">
-                    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Commissions</h6><div class="h4">{{ number_format($totalAllow,2) }}</div></div></div></div>
-                    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Total Deductions</h6><div class="h4">{{ number_format($totalDeduct,2) }}</div></div></div></div>
-                    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Payment Completion</h6><div class="h4">{{ $paymentCompletionRate }}%</div></div></div></div>
-                    <div class="col-md-3"><div class="card"><div class="card-body"><h6>Avg Approval Hours</h6><div class="h4">{{ $avgApprovalHours }}</div></div></div></div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Total Commissions</h6>
+                                <div class="h4">{{ number_format($totalAllow,2) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Total Deductions</h6>
+                                <div class="h4">{{ number_format($totalDeduct,2) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Payment Completion</h6>
+                                <div class="h4">{{ $paymentCompletionRate }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Avg Approval Hours</h6>
+                                <div class="h4">{{ $avgApprovalHours }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <h6 class="mt-3">Total Cost (last 12 months)</h6>
                 <div class="table-responsive">
                     <table class="table table-striped">
-                        <thead><tr><th>Year</th><th>Month</th><th>Total</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Month</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             @foreach($totalCostByMonth as $r)
-                                <tr><td>{{ $r->year }}</td><td>{{ $r->month }}</td><td>{{ number_format($r->total,2) }}</td></tr>
+                            <tr>
+                                <td>{{ $r->year }}</td>
+                                <td>{{ $r->month }}</td>
+                                <td>{{ number_format($r->total,2) }}</td>
+                            </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -80,19 +119,30 @@
                 <h6 class="mt-3">Payroll Items</h6>
                 <div class="table-responsive">
                     <table class="table table-striped">
-                        <thead><tr><th>Employee</th><th>Organization</th><th>Period</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Net</th><th>Status</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Organization</th>
+                                <th>Period</th>
+                                <th>Basic</th>
+                                <th>Allowances</th>
+                                <th>Deductions</th>
+                                <th>Net</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             @foreach($items as $p)
-                                <tr>
-                                    <td>{{ optional($p->employee)->first_name }} {{ optional($p->employee)->last_name }}</td>
-                                    <td>{{ optional(optional($p->employee)->organization)->name }}</td>
-                                    <td>{{ $p->year }}-{{ str_pad($p->month,2,'0',STR_PAD_LEFT) }}</td>
-                                    <td>{{ number_format($p->basic_salary,2) }}</td>
-                                    <td>{{ number_format($p->allowances,2) }}</td>
-                                    <td>{{ number_format($p->deductions,2) }}</td>
-                                    <td>{{ number_format($p->net_pay,2) }}</td>
-                                    <td><span class="badge bg-{{ $p->status==='paid'?'success':($p->status==='approved'?'primary':'secondary') }}">{{ ucfirst($p->status) }}</span></td>
-                                </tr>
+                            <tr>
+                                <td>{{ optional($p->employee)->first_name }} {{ optional($p->employee)->last_name }}</td>
+                                <td>{{ optional(optional($p->employee)->organization)->name }}</td>
+                                <td>{{ $p->year }}-{{ str_pad($p->month,2,'0',STR_PAD_LEFT) }}</td>
+                                <td>{{ number_format($p->basic_salary,2) }}</td>
+                                <td>{{ number_format($p->allowances,2) }}</td>
+                                <td>{{ number_format($p->deductions,2) }}</td>
+                                <td>{{ number_format($p->net_pay,2) }}</td>
+                                <td><span class="badge bg-{{ $p->status==='paid'?'success':($p->status==='approved'?'primary':'secondary') }}">{{ ucfirst($p->status) }}</span></td>
+                            </tr>
                             @endforeach
                         </tbody>
                     </table>

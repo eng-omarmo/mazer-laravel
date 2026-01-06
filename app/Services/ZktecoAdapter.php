@@ -36,7 +36,9 @@ class ZktecoAdapter implements FingerprintDeviceService
     public function handshake(): bool
     {
         try {
-            $resp = Http::timeout(2)->retry(3, 300)->asJson()->post($this->endpoint.'/handshake', [
+            $resp = Http::timeout(2)->retry(3, 300)->asJson()->withHeaders([
+                'X-AGENT-KEY' => (string) config('fingerprint.agent_key', env('FINGERPRINT_AGENT_KEY', '')),
+            ])->post($this->endpoint.'/handshake', [
                 'client' => 'laravel',
                 'ts' => now()->timestamp,
                 'transport' => $this->transport,
@@ -52,7 +54,9 @@ class ZktecoAdapter implements FingerprintDeviceService
         $lastError = null;
         for ($i = 0; $i < max(1, $attempts); $i++) {
             try {
-                $resp = Http::timeout(2)->retry(2, 250)->asJson()->post($this->endpoint.'/capture', [
+                $resp = Http::timeout(2)->retry(2, 250)->asJson()->withHeaders([
+                    'X-AGENT-KEY' => (string) config('fingerprint.agent_key', env('FINGERPRINT_AGENT_KEY', '')),
+                ])->post($this->endpoint.'/capture', [
                     'min_dpi' => 500,
                     'quality_threshold' => 70,
                     'transport' => $this->transport,

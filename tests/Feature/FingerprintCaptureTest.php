@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Employee;
 use App\Models\BiometricTemplate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,6 +15,7 @@ class FingerprintCaptureTest extends TestCase
     use RefreshDatabase;
 
     protected User $adminUser;
+    protected Employee $employee;
 
     protected function setUp(): void
     {
@@ -23,6 +25,17 @@ class FingerprintCaptureTest extends TestCase
         $this->adminUser = User::factory()->create(['role' => 'admin']);
         $this->adminUser->assignRole('admin');
         Auth::login($this->adminUser);
+
+        // Create a dummy employee
+        $this->employee = Employee::create([
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@example.com',
+            'salary' => 1000,
+            'status' => 'active',
+            'contract' => 'dummy', // Assuming simple string or file path mock
+            'cv' => 'dummy',
+        ]);
     }
 
     public function test_handshake_and_capture_creates_biometric_template_record(): void
@@ -42,7 +55,7 @@ class FingerprintCaptureTest extends TestCase
         config(['app.biometric_key' => base64_encode(random_bytes(32))]);
 
         $response = $this->actingAs($this->adminUser)->post(route('hrm.fingerprint.capture'), [
-            'user_id' => $this->adminUser->id,
+            'employee_id' => $this->employee->id,
         ]);
 
         $response->assertStatus(200);
@@ -50,7 +63,7 @@ class FingerprintCaptureTest extends TestCase
 
         $this->assertDatabaseCount('biometric_templates', 1);
         $record = BiometricTemplate::first();
-        $this->assertEquals($this->adminUser->id, $record->user_id);
+        $this->assertEquals($this->employee->id, $record->employee_id);
         $this->assertEquals(500, $record->dpi);
         $this->assertEquals(80, $record->quality_score);
         $this->assertEquals('ZK-123456', $record->device_sn);
@@ -58,6 +71,10 @@ class FingerprintCaptureTest extends TestCase
         $this->assertNotEmpty($record->ciphertext);
         $this->assertNotEmpty($record->iv);
         $this->assertNotEmpty($record->tag);
+
+        $this->employee->refresh();
+        $this->assertEquals($record->id, $this->employee->fingerprint_id);
     }
 }
 
+    

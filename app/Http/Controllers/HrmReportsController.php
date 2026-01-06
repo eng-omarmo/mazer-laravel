@@ -27,7 +27,7 @@ class HrmReportsController extends Controller
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('q')) {
-            $needle = '%'.$request->string('q').'%';
+            $needle = '%' . $request->string('q') . '%';
             $query->where(function ($q) use ($needle) {
                 $q->where('first_name', 'like', $needle)->orWhere('last_name', 'like', $needle);
             });
@@ -61,7 +61,7 @@ class HrmReportsController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Name', 'Department', 'Status']);
             foreach ($rows as $e) {
-                fputcsv($out, [$e->first_name.' '.$e->last_name, optional($e->department)->name, $e->status]);
+                fputcsv($out, [$e->first_name . ' ' . $e->last_name, optional($e->department)->name, $e->status]);
             }
             fclose($out);
         });
@@ -78,7 +78,7 @@ class HrmReportsController extends Controller
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('type')) {
-            $query->where('type', 'like', '%'.$request->string('type').'%');
+            $query->where('type', 'like', '%' . $request->string('type') . '%');
         }
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->integer('employee_id'));
@@ -114,7 +114,7 @@ class HrmReportsController extends Controller
             fputcsv($out, ['Employee', 'Type', 'Status', 'Start', 'End', 'Days']);
             foreach ($rows as $l) {
                 $days = $l->start_date && $l->end_date ? $l->end_date->diffInDays($l->start_date) : '';
-                fputcsv($out, [optional($l->employee)->first_name.' '.optional($l->employee)->last_name, $l->type, $l->status, $l->start_date, $l->end_date, $days]);
+                fputcsv($out, [optional($l->employee)->first_name . ' ' . optional($l->employee)->last_name, $l->type, $l->status, $l->start_date, $l->end_date, $days]);
             }
             fclose($out);
         });
@@ -201,6 +201,61 @@ class HrmReportsController extends Controller
         $organizations = \App\Models\Organization::orderBy('name')->get();
 
         return view('hrm.reports-payroll', compact('items', 'totalCostByMonth', 'totalAllow', 'totalDeduct', 'paymentCompletionRate', 'avgApprovalHours', 'employees', 'organizations'));
+    }
+
+    public function payrollCsv(Request $request): StreamedResponse
+    {
+        if (! $request->filled('employee_id')) {
+            $response = new StreamedResponse(function () {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['Error']);
+                fputcsv($out, ['Select employee to export']);
+                fclose($out);
+            });
+            $response->headers->set('Content-Type', 'text/csv');
+            $response->headers->set('Content-Disposition', 'attachment; filename="employee-payroll-error.csv"');
+            return $response;
+        }
+        $query = Payroll::query()->with('employee')->where('employee_id', (int) $request->input('employee_id'));
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
+        }
+        if ($request->filled('year')) {
+            $query->where('year', (int) $request->input('year'));
+        }
+        if ($request->filled('month')) {
+            $query->where('month', (int) $request->input('month'));
+        }
+        if ($request->filled('organization_id')) {
+            $query->whereHas('employee', function ($q) use ($request) {
+                $q->where('organization_id', (int) $request->input('organization_id'));
+            });
+        }
+        $rows = $query->orderByDesc('year')->orderByDesc('month')->get();
+        $response = new StreamedResponse(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Employee', 'Organization', 'Year', 'Month', 'Basic', 'Allowances', 'Deductions', 'Net', 'Status']);
+            foreach ($rows as $p) {
+                $emp = optional($p->employee);
+                $org = optional($emp->organization);
+                fputcsv($out, [
+                    $emp->first_name . ' ' . $emp->last_name,
+                    $org->name,
+                    $p->year,
+                    $p->month,
+                    $p->basic_salary,
+                    $p->allowances,
+                    $p->deductions,
+                    $p->net_pay,
+                    $p->status,
+                ]);
+            }
+            fclose($out);
+        });
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="employee-payroll.csv"');
+
+        return $response;
     }
 
     public function expenses(Request $request)
