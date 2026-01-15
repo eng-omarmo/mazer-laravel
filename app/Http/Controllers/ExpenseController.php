@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Services\MerchantPaymentService;
+use App\Services\MerchantPayService;
 
 class ExpenseController extends Controller
 {
@@ -60,7 +62,7 @@ class ExpenseController extends Controller
         $docPath = null;
         if ($request->hasFile('upload_document')) {
             $file = $request->file('upload_document');
-            $name = 'expense_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
+            $name = 'expense_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $docPath = Storage::disk('public')->putFileAs('expense_docs', $file, $name);
         }
 
@@ -98,7 +100,7 @@ class ExpenseController extends Controller
         $docPath = $expense->document_path;
         if ($request->hasFile('upload_document')) {
             $file = $request->file('upload_document');
-            $name = 'expense_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
+            $name = 'expense_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $docPath = Storage::disk('public')->putFileAs('expense_docs', $file, $name);
         }
 
@@ -168,7 +170,7 @@ class ExpenseController extends Controller
         $remaining = $expense->remaining();
         $amount = (float) $validated['amount'];
         if ($amount > $remaining) {
-            return back()->withErrors(['amount' => 'Amount exceeds remaining balance ('.number_format($remaining, 2).')']);
+            return back()->withErrors(['amount' => 'Amount exceeds remaining balance (' . number_format($remaining, 2) . ')']);
         }
 
         ExpensePayment::create([
@@ -179,7 +181,8 @@ class ExpenseController extends Controller
             'note' => $validated['note'] ?? null,
             'status' => 'pending',
         ]);
-        // update
+
+
 
         return back()->with('status', 'Payment recorded, pending approval');
     }
@@ -197,12 +200,40 @@ class ExpenseController extends Controller
         if (! in_array($role, ['admin'])) {
             abort(403, 'Only Admin can approve payments.');
         }
-
         $payment->update(['status' => 'approved']);
         $payment->expense->updatePaymentStatus();
+        $accountInfo =   $this->basedOnPrefixGetPaymentMethod($payment->expense->supplier->account);
+        $data = [
+            'amount' => $payment->amount,
+            'receiver' => $accountInfo['account'],
+            'paid_by' => Auth::id(),
+            'note' => $payment->note,
+            'payment_method' => $accountInfo['payment_method'],
+            'status' => 'pending',
+        ];
+
+        //merchant payment servce
+        $merchantPaymentService = new  MerchantPayService();
+        $merchantPaymentService->executeTransaction($data);
 
         return back()->with('status', 'Payment approved');
     }
+    private function basedOnPrefixGetPaymentMethod($account)
+    {
+
+        $account = str_replace('+252', '', $account);
+
+        $prefix = substr($account, 0, 2);
+        $firstDigit = substr($account, 0, 1);
+        if ($prefix === '77' || $prefix === '61') {
+            return ['account' => $account, 'payment_method' => 'Hormuud'];
+        } elseif ($prefix === '62') {
+            return ['account' => $account, 'payment_method' => 'Somtel'];
+        } else {
+            return ['account' => $account, 'payment_method' => 'Unknown'];
+        }
+    }
+
 
     public function rejectPayment(ExpensePayment $payment)
     {
