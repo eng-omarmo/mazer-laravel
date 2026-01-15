@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Services\MerchantPaymentService;
 use App\Services\MerchantPayService;
 
 class ExpenseController extends Controller
@@ -196,25 +195,32 @@ class ExpenseController extends Controller
 
     public function approvePayment(ExpensePayment $payment)
     {
-        $role = strtolower(auth()->user()->role ?? 'hrm');
-        if (! in_array($role, ['admin'])) {
-            abort(403, 'Only Admin can approve payments.');
+        $expense = $payment->expense()->with('supplier')->first();
+        if (! $expense || ! $expense->supplier || ! $expense->supplier->account) {
+            return back()->withErrors(['status' => 'Supplier account missing']);
         }
-        $payment->update(['status' => 'approved']);
-        $payment->expense->updatePaymentStatus();
-        $accountInfo =   $this->basedOnPrefixGetPaymentMethod($payment->expense->supplier->account);
+
+        $accountInfo = $this->basedOnPrefixGetPaymentMethod($expense->supplier->account);
+        $svc = app(MerchantPayService::class);
         $data = [
-            'amount' => $payment->amount,
             'receiver' => $accountInfo['account'],
-            'paid_by' => Auth::id(),
-            'note' => $payment->note,
+            'amount' => number_format((float) $payment->amount, 2, '.', ''),
             'payment_method' => $accountInfo['payment_method'],
-            'status' => 'pending',
+            'reference' => 'EXP-' . $payment->id . '-' . now()->format('YmdHis'),
         ];
 
-        //merchant payment servce
-        $merchantPaymentService = new  MerchantPayService();
-        $merchantPaymentService->executeTransaction($data);
+        try {
+            $res = $svc->executeTransaction($data);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['status' => 'Payment gateway error']);
+        }
+
+        if (isset($res['status']) && $res['status'] == false) {
+            return back()->withErrors(['status' => $res['message'] ?? 'Payment failed']);
+        }
+
+        $payment->update(['status' => 'approved']);
+        $payment->expense->updatePaymentStatus();
 
         return back()->with('status', 'Payment approved');
     }
@@ -224,7 +230,6 @@ class ExpenseController extends Controller
         $account = str_replace('+252', '', $account);
 
         $prefix = substr($account, 0, 2);
-        $firstDigit = substr($account, 0, 1);
         if ($prefix === '77' || $prefix === '61') {
             return ['account' => $account, 'payment_method' => 'Hormuud'];
         } elseif ($prefix === '62') {
