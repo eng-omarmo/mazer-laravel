@@ -132,6 +132,21 @@ class RolePermissionSeeder extends Seeder
             'create users',
             'edit users',
             'delete users',
+            // New hierarchical permissions (Expense Management Module)
+            // Expense Review
+            'expense.view',
+            'expense.approve',
+            'expense.reject',
+            'expense.request_modification',
+            // Payment Processing
+            'payment.initiate',
+            'payment.approve',
+            'payment.view_history',
+            'payment.cancel',
+            // Administrative Functions
+            'admin.expense_categories.manage',
+            'admin.workflows.configure',
+            'admin.reports.access',
         ];
 
         foreach ($permissions as $permission) {
@@ -190,6 +205,11 @@ class RolePermissionSeeder extends Seeder
             'view attendance reports',
             'view payroll reports',
             'export reports',
+            // Hierarchical expense review capabilities
+            'expense.view',
+            'expense.request_modification',
+            // Admin reports view (limited)
+            'admin.reports.access',
         ]);
 
         $financeRole = Role::firstOrCreate(['name' => 'finance']);
@@ -209,6 +229,14 @@ class RolePermissionSeeder extends Seeder
             'view payroll reports',
             'view expense reports',
             'export reports',
+            // Hierarchical payment processing
+            'payment.initiate',
+            'payment.approve',
+            'payment.view_history',
+            'payment.cancel',
+            // Expense review/approve
+            'expense.view',
+            'expense.approve',
         ]);
 
         $employeeRole = Role::firstOrCreate(['name' => 'employee']);
@@ -219,6 +247,10 @@ class RolePermissionSeeder extends Seeder
             'view attendance',
             'view advances',
             'view advance receipts',
+            // Limited expense visibility
+            'expense.view',
+            // Payment history visibility for own context (if needed via policies)
+            'payment.view_history',
         ]);
 
         $creditManagerRole = Role::firstOrCreate(['name' => 'credit_manager']);
@@ -227,6 +259,9 @@ class RolePermissionSeeder extends Seeder
             'review expenses',
             'approve expenses',
             'view expense reports',
+            // Hierarchical review
+            'expense.view',
+            'expense.request_modification',
         ]);
 
         // Assign roles to existing users based on their current 'role' field

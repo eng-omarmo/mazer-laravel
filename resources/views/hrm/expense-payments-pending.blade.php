@@ -26,9 +26,6 @@
                 @endif
 
 
-                @php
-                    $role = strtolower(auth()->user()->role ?? 'hrm');
-                @endphp
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -55,18 +52,22 @@
                                 <td>{{ $payment->note }}</td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        @if($role === 'admin')
+                                        @can('payment.approve')
                                         <form action="{{ route('hrm.expense-payments.approve', $payment) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                         </form>
+                                        @endcan
+                                        @can('payment.cancel')
                                         <form action="{{ route('hrm.expense-payments.reject', $payment) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                         </form>
-                                        @endif
+                                        @endcan
 
+                                        @can('expense.view')
                                         <a href="{{ route('hrm.expenses.show', $payment->expense) }}" class="btn btn-info btn-sm">View Details</a>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

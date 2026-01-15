@@ -118,7 +118,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/suppliers/{supplier}', [\App\Http\Controllers\SupplierController::class, 'destroy'])->middleware('can:delete suppliers')->name('suppliers.destroy');
         });
 
-        Route::middleware(['can:view expenses'])->group(function () {
+        Route::middleware(['can:expense.view'])->group(function () {
             Route::get('/expenses', [\App\Http\Controllers\ExpenseController::class, 'index'])->name('expenses.index');
             Route::get('/expenses/create', [\App\Http\Controllers\ExpenseController::class, 'create'])->middleware('can:create expenses')->name('expenses.create');
             Route::post('/expenses', [\App\Http\Controllers\ExpenseController::class, 'store'])->middleware('can:create expenses')->name('expenses.store');
@@ -126,15 +126,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'show'])->name('expenses.show');
             Route::patch('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'update'])->middleware('can:edit expenses')->name('expenses.update');
             Route::delete('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->middleware('can:delete expenses')->name('expenses.destroy');
-            Route::post('/expenses/{expense}/review', [\App\Http\Controllers\ExpenseController::class, 'review'])->middleware('can:approve expenses')->name('expenses.review');
-            Route::post('/expenses/{expense}/approve', [\App\Http\Controllers\ExpenseController::class, 'approve'])->middleware('can:approve expenses')->name('expenses.approve');
-            Route::post('/expenses/{expense}/pay', [\App\Http\Controllers\ExpenseController::class, 'pay'])->middleware('can:pay expenses')->name('expenses.pay');
+            Route::post('/expenses/{expense}/review', [\App\Http\Controllers\ExpenseController::class, 'review'])->middleware('can:expense.view')->name('expenses.review');
+            Route::post('/expenses/{expense}/approve', [\App\Http\Controllers\ExpenseController::class, 'approve'])->middleware('can:expense.approve')->name('expenses.approve');
+            Route::post('/expenses/{expense}/pay', [\App\Http\Controllers\ExpenseController::class, 'pay'])->middleware('can:payment.initiate')->name('expenses.pay');
         });
 
-        Route::get('/expenses/payments/pending', [\App\Http\Controllers\ExpenseController::class, 'pendingExpensePayments'])->middleware('can:view pending payments')->name('expenses.payments.pending');
+        Route::get('/expenses/payments/pending', [\App\Http\Controllers\ExpenseController::class, 'pendingExpensePayments'])->middleware('can:payment.view_history')->name('expenses.payments.pending');
 
-        Route::post('/expenses/payments/{payment}/approve', [\App\Http\Controllers\ExpenseController::class, 'approvePayment'])->middleware('can:pay expenses')->name('expense-payments.approve');
-        Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->middleware('can:pay expenses')->name('expense-payments.reject');
+        Route::post('/expenses/payments/{payment}/approve', [\App\Http\Controllers\ExpenseController::class, 'approvePayment'])->middleware('can:payment.approve')->name('expense-payments.approve');
+        Route::post('/expenses/payments/{payment}/reject', [\App\Http\Controllers\ExpenseController::class, 'rejectPayment'])->middleware('can:payment.cancel')->name('expense-payments.reject');
 
         Route::get('/payroll/batches', [PayrollBatchController::class, 'index'])->middleware('can:view payroll batches')->name('payroll.batches.index');
         Route::get('/payroll/batches/create', [PayrollBatchController::class, 'create'])->middleware('can:create payroll batches')->name('payroll.batches.create');

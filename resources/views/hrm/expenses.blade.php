@@ -25,13 +25,10 @@
                 <div class="alert alert-success">{{ session('status') }}</div>
                 @endif
 
-                @php
-                $role = strtolower(auth()->user()->role ?? 'hrm');
-                @endphp
                 <div class="d-flex mb-3 align-items-end gap-2">
-                    @if(in_array($role, ['credit_manager', 'admin']))
+                    @can('create expenses')
                     <a href="{{ route('hrm.expenses.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> New Expense</a>
-                    @endif
+                    @endcan
                     <form class="row g-2" method="get" action="{{ route('hrm.expenses.index') }}">
                         <div class="col-md-3">
                             <label class="form-label">Status</label>
@@ -107,33 +104,37 @@
                                 </td>
                                 <td><span class="badge bg-{{ $x->status==='approved'?'success':($x->status==='reviewed'?'primary':'secondary') }}">{{ ucfirst($x->status) }}</span></td>
                                 <td class="d-flex gap-1">
-                                    @if(in_array($role, ['credit_manager', 'admin']))
+                                    @can('edit expenses')
                                     <a href="{{ route('hrm.expenses.edit', $x) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
-                                    @endif
-
-                                    @if(in_array($role, ['finance', 'admin']) && $x->status != 'pending')
+                                    @endcan
+                                    @can('payment.initiate')
+                                    @if($x->status != 'pending')
                                     <a href="{{ route('hrm.expenses.show', $x) }}" class="btn btn-primary btn-sm"><i class="bi bi-cash"></i> Pay</a>
                                     @endif
-
-                                    @if($x->status==='pending' && in_array($role, ['finance', 'admin']))
+                                    @endcan
+                                    @if($x->status==='pending')
+                                    @can('expense.view')
                                     <form method="post" action="{{ route('hrm.expenses.review', $x) }}">
                                         @csrf
                                         <button class="btn btn-outline-warning btn-sm"><i class="bi bi-clipboard-check"></i> Review</button>
                                     </form>
+                                    @endcan
                                     @endif
-                                    @if($x->status==='reviewed' && in_array($role, ['admin']) )
+                                    @if($x->status==='reviewed')
+                                    @can('expense.approve')
                                     <form method="post" action="{{ route('hrm.expenses.approve', $x) }}">
                                         @csrf
                                         <button class="btn btn-success btn-sm"><i class="bi bi-check2-circle"></i> Approve</button>
                                     </form>
+                                    @endcan
                                     @endif
-                                    @if(in_array($role, ['admin']))
+                                    @can('delete expenses')
                                     <form method="post" action="{{ route('hrm.expenses.destroy', $x) }}" onsubmit="return confirm('Delete this expense?')">
                                         @csrf
                                         @method('delete')
                                         <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
                                     </form>
-                                    @endif
+                                    @endcan
                                 </td>
                             </tr>
                             @empty
