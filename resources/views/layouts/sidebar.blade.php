@@ -202,16 +202,16 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.reports.payroll') ? 'active' : '' }}"><a
                             href="{{ route('hrm.reports.payroll') }}"><i class="bi bi-cash-stack"></i> Payroll</a>
                     </li>
-                    <!-- <li class="submenu-item {{ request()->routeIs('hrm.reports.expenses') ? 'active' : '' }}"><a
+                    <li class="submenu-item {{ request()->routeIs('hrm.reports.expenses') ? 'active' : '' }}"><a
                             href="{{ route('hrm.reports.expenses') }}"><i class="bi bi-receipt"></i> Expenses</a>
-                    </li> -->
+                    </li>
                     <li class="submenu-item {{ request()->routeIs('hrm.reports.payments') ? 'active' : '' }}"><a
                             href="{{ route('hrm.reports.payments') }}"><i class="bi bi-credit-card"></i> Payments</a>
                     </li>
                 </ul>
             </li>
             @endcan
-            <!--
+
             @canany(['view suppliers', 'view expenses'])
             <li class="sidebar-item has-sub {{ (request()->is('hrm/suppliers*') || request()->is('hrm/expenses*')) ? 'active' : '' }}">
                 <a href="#" class="sidebar-link">
@@ -233,7 +233,7 @@
                     @endcan
                 </ul>
             </li>
-            @endcan -->
+            @endcan
 
             @canany(['view users', 'view roles', 'view permissions', 'view api configs'])
             <li class="sidebar-title">Administration</li>
