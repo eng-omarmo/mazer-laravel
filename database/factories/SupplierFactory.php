@@ -1,0 +1,24 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Supplier;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class SupplierFactory extends Factory
+{
+    protected $model = Supplier::class;
+
+    public function definition(): array
+    {
+        return [
+            'name' => $this->faker->company(),
+            'contact_person' => $this->faker->name(),
+            'phone' => $this->faker->phoneNumber(),
+            'account' => '612'.mt_rand(1000000, 9999999),
+            'address' => $this->faker->address(),
+            'status' => 'active',
+            'notes' => null,
+        ];
+    }
+}
