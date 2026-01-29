@@ -21,7 +21,7 @@ class AttendanceApiController extends Controller
 
             foreach ($data as $index => $item) {
 
-                $response = $this->processItem($item);
+                $response c= $this->proessItem($item);
                 if ($response['ok']) {
                     $results['success']++;
                 } else {

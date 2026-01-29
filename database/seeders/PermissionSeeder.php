@@ -19,44 +19,83 @@ class PermissionSeeder extends Seeder
             'view dashboard',
 
             // HRM - Organizations
-            'view organizations', 'create organizations', 'edit organizations', 'delete organizations',
+            'view organizations',
+            'create organizations',
+            'edit organizations',
+            'delete organizations',
 
             // HRM - Departments
-            'view departments', 'create departments', 'edit departments', 'delete departments',
+            'view departments',
+            'create departments',
+            'edit departments',
+            'delete departments',
 
             // HRM - Employees
-            'view employees', 'create employees', 'edit employees', 'delete employees',
+            'view employees',
+            'create employees',
+            'edit employees',
+            'delete employees',
 
             // HRM - Documents
-            'view documents', 'verify documents', 'approve documents', 'reject documents',
+            'view documents',
+            'verify documents',
+            'approve documents',
+            'reject documents',
 
             // HRM - Leaves
-            'view leaves', 'create leaves', 'edit leaves', 'approve leaves',
+            'view leaves',
+            'create leaves',
+            'edit leaves',
+            'approve leaves',
 
             // HRM - Payroll
-            'view payroll', 'create payroll', 'process payroll',
+            'view payroll',
+            'create payroll',
+            'process payroll',
 
             // HRM - Advances
-            'view advances', 'create advances', 'edit advances', 'approve advances',
+            'view advances',
+            'create advances',
+            'edit advances',
+            'approve advances',
 
             // HRM - Wallet
-            'view wallet', 'manage wallet',
+            'view wallet',
+            'manage wallet',
 
             // HRM - Attendance
-            'view attendance', 'mark attendance', 'view attendance summary',
+            'view attendance',
+            'mark attendance',
+            'view attendance summary',
 
             // HRM - Reports
             'view reports',
 
             // Expense Management
-            'view suppliers', 'create suppliers', 'edit suppliers', 'delete suppliers',
-            'view expenses', 'create expenses', 'edit expenses', 'approve expenses', 'pay expenses',
+            'view suppliers',
+            'create suppliers',
+            'edit suppliers',
+            'delete suppliers',
+            'view expenses',
+            'create expenses',
+            'edit expenses',
+            'approve expenses',
+            'pay expenses',
             'view pending payments',
 
             // Administration
-            'view users', 'create users', 'edit users', 'delete users',
-            'view roles', 'create roles', 'edit roles', 'delete roles',
-            'view permissions', 'create permissions', 'edit permissions', 'delete permissions',
+            'view users',
+            'create users',
+            'edit users',
+            'delete users',
+            'view roles',
+            'create roles',
+            'edit roles',
+            'delete roles',
+            'view permissions',
+            'create permissions',
+            'edit permissions',
+            'delete permissions',
         ];
 
         foreach ($permissions as $permission) {
@@ -73,15 +112,35 @@ class PermissionSeeder extends Seeder
         $hrmRole = Role::firstOrCreate(['name' => 'hrm']);
         $hrmPermissions = [
             'view dashboard',
-            'view organizations', 'create organizations', 'edit organizations',
-            'view departments', 'create departments', 'edit departments',
-            'view employees', 'create employees', 'edit employees',
-            'view documents', 'verify documents', 'approve documents', 'reject documents',
-            'view leaves', 'create leaves', 'edit leaves', 'approve leaves',
-            'view payroll', 'create payroll', 'process payroll',
-            'view advances', 'create advances', 'edit advances', 'approve advances',
-            'view wallet', 'manage wallet',
-            'view attendance', 'mark attendance', 'view attendance summary',
+            'view organizations',
+            'create organizations',
+            'edit organizations',
+            'view departments',
+            'create departments',
+            'edit departments',
+            'view employees',
+            'create employees',
+            'edit employees',
+            'view documents',
+            'verify documents',
+            'approve documents',
+            'reject documents',
+            'view leaves',
+            'create leaves',
+            'edit leaves',
+            'approve leaves',
+            'view payroll',
+            'create payroll',
+            'process payroll',
+            'view advances',
+            'create advances',
+            'edit advances',
+            'approve advances',
+            'view wallet',
+            'manage wallet',
+            'view attendance',
+            'mark attendance',
+            'view attendance summary',
             'view reports',
         ];
         $hrmRole->givePermissionTo($hrmPermissions);
@@ -90,8 +149,11 @@ class PermissionSeeder extends Seeder
         $creditManagerRole = Role::firstOrCreate(['name' => 'credit_manager']);
         $creditManagerPermissions = [
             'view dashboard',
-            'view expenses', 'create expenses', 'edit expenses',
-            'view suppliers', 'create suppliers',
+            'view expenses',
+            'create expenses',
+            'edit expenses',
+            'view suppliers',
+            'create suppliers',
         ];
         $creditManagerRole->givePermissionTo($creditManagerPermissions);
 
@@ -99,7 +161,9 @@ class PermissionSeeder extends Seeder
         $financeRole = Role::firstOrCreate(['name' => 'finance']);
         $financePermissions = [
             'view dashboard',
-            'view expenses', 'edit expenses', 'approve expenses', // 'approve' here contextually means 'review'
+            'view expenses',
+            'edit expenses',
+            'approve expenses', // 'approve' here contextually means 'review'
             'view suppliers',
             'view pending payments',
             'pay expenses',
