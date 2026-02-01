@@ -21,7 +21,7 @@ class AttendanceApiController extends Controller
 
             foreach ($data as $index => $item) {
 
-                $response c= $this->proessItem($item);
+                $response = $this->processItem($item);
                 if ($response['ok']) {
                     $results['success']++;
                 } else {
@@ -59,7 +59,7 @@ class AttendanceApiController extends Controller
         $validated = $validator->validated();
 
         $employee = Employee::where('fingerprint_id', $validated['fingerprint_id'])->first();
-        dd($employee);
+
         if (! $employee) {
             Log::warning('Attendance sync: fingerprint not mapped', $validated);
             return ['ok' => false, 'error' => 'Employee not found'];
