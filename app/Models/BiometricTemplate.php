@@ -31,4 +31,3 @@ class BiometricTemplate extends Model
         return $this->belongsTo(Employee::class);
     }
 }
-

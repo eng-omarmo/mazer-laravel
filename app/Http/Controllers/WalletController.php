@@ -16,7 +16,6 @@ class WalletController extends Controller
     public function index()
     {
         $wallets = $this->merchantPayService->WalletsInfo();
-
         return view('hrm.wallet', compact('wallets'));
     }
 

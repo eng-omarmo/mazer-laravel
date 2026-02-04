@@ -48,7 +48,7 @@ class ApiConfigurationController extends Controller
     public function update(Request $request, ApiConfiguration $apiConfiguration)
     {
         $validated = $request->validate([
-            'token' => ['required', 'string', 'max:255', 'unique:api_configurations,token,'.$apiConfiguration->id],
+            'token' => ['required', 'string', 'max:255', 'unique:api_configurations,token,' . $apiConfiguration->id],
         ]);
 
         $apiConfiguration->update($validated);

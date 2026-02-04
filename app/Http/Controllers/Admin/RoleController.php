@@ -61,7 +61,7 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'unique:roles,name,'.$role->id, 'max:255'],
+            'name' => ['required', 'string', 'unique:roles,name,' . $role->id, 'max:255'],
             'permissions' => ['array'],
             'permissions.*' => ['exists:permissions,id'],
         ]);
