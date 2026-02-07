@@ -30,6 +30,12 @@
 
                 <div class="d-flex mb-3 align-items-end gap-2">
                     <a href="{{ route('hrm.attendance.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Mark Attendance</a>
+
+                    <form action="{{ route('hrm.attendance.sync') }}" method="POST" style="display:inline;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<span class=\'spinner-border spinner-border-sm\' role=\'status\' aria-hidden=\'true\'></span> Syncing...';">
+                        @csrf
+                        <button type="submit" class="btn btn-success"><i class="bi bi-arrow-repeat"></i> Sync (Last 24h)</button>
+                    </form>
+
                     <form class="row g-2" method="get" action="{{ route('hrm.attendance.index') }}">
                         <div class="col">
                             <label class="form-label">Date</label>

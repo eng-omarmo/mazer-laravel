@@ -91,6 +91,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
             Route::get('/attendance/create', [AttendanceController::class, 'create'])->middleware('can:create attendance')->name('attendance.create');
             Route::post('/attendance', [AttendanceController::class, 'store'])->middleware('can:create attendance')->name('attendance.store');
+            Route::post('/attendance/sync', [AttendanceController::class, 'sync'])->middleware('can:create attendance')->name('attendance.sync');
             Route::get('/attendance/{log}/edit', [AttendanceController::class, 'edit'])->middleware('can:edit attendance')->name('attendance.edit');
             Route::patch('/attendance/{log}', [AttendanceController::class, 'update'])->middleware('can:edit attendance')->name('attendance.update');
             Route::get('/attendance/summary', [AttendanceController::class, 'summary'])->middleware('can:view attendance summary')->name('attendance.summary');
@@ -179,6 +180,8 @@ Route::middleware('auth')->group(function () {
         });
     });
 
+    // Route moved to end of file
+
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware(['can:view users'])->group(function () {
             Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
@@ -213,6 +216,26 @@ Route::middleware('auth')->group(function () {
         Route::patch('/api-configurations/{apiConfiguration}', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'update'])->middleware('can:edit api configs')->name('api-configurations.update');
         Route::delete('/api-configurations/{apiConfiguration}', [\App\Http\Controllers\Admin\ApiConfigurationController::class, 'destroy'])->middleware('can:delete api configs')->name('api-configurations.destroy');
     });
+});
+
+Route::get('/test-device', function () {
+    $device = new \App\Services\ZktecoAdapter();
+    $handshake = $device->handshake();
+
+    // Attempt capture (simulated for now)
+    try {
+        // We simulate a capture call. In real scenario, we'd need parameters.
+        // But the adapter's captureTemplate() sends default params.
+        $capture = $device->captureTemplate(1);
+    } catch (\Throwable $e) {
+        $capture = $e->getMessage();
+    }
+
+    return response()->json([
+        'handshake' => $handshake,
+        'capture_result' => $capture,
+        'agent_url' => config('fingerprint.agent_url'),
+    ]);
 });
 
 require __DIR__.'/auth.php';

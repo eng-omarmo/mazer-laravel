@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttendanceController extends Controller
@@ -29,6 +30,142 @@ class AttendanceController extends Controller
         $departments = Department::orderBy('name')->get();
 
         return view('hrm.attendance', compact('logs', 'departments'));
+    }
+
+    public function sync(Request $request)
+    {
+        try {
+            $client = new \GuzzleHttp\Client();
+            $agentUrl = env('ZK_AGENT_URL', 'http://127.0.0.1:8282');
+
+            // Calculate 24-hour window
+            $since = now()->subHours(24);
+            $sinceStr = $since->toDateTimeString();
+
+            Log::info("Starting attendance sync from $agentUrl (Since: $sinceStr)");
+
+            $response = $client->get("$agentUrl/logs", [
+                'headers' => [
+                    'X-AGENT-KEY' => env('FINGERPRINT_AGENT_KEY', '')
+                ],
+                'query' => [
+                    'since' => $sinceStr
+                ],
+                'timeout' => 20
+            ]);
+
+            $result = json_decode($response->getBody(), true);
+
+            if (!$result || !isset($result['ok']) || !$result['ok']) {
+                $err = $result['error'] ?? 'Unknown error from agent';
+                Log::error("Attendance sync failed: $err");
+                throw new \Exception($err);
+            }
+
+            $logs = $result['data'] ?? [];
+            $totalFetched = count($logs);
+            Log::info("Fetched $totalFetched logs from device (last 24h).");
+
+            // Sort logs by time to ensure correct check-in/out order
+            usort($logs, function ($a, $b) {
+                $t1 = $a['time'] ?? $a['attTime'] ?? '';
+                $t2 = $b['time'] ?? $b['attTime'] ?? '';
+                return strcmp($t1, $t2);
+            });
+
+            $count = 0;
+            $updatedCount = 0;
+            $processedEmployees = [];
+
+            foreach ($logs as $log) {
+                // Parse time
+                $timeStr = $log['time'] ?? $log['attTime'] ?? null;
+                if (!$timeStr) continue;
+
+                $ts = strtotime($timeStr);
+                $date = date('Y-m-d', $ts);
+                $time = date('H:i', $ts);
+                $userId = $log['userId'] ?? $log['uid'] ?? 0;
+
+                // Ensure log is within the last 24 hours (double check)
+                if ($timeStr < $sinceStr) {
+                    continue;
+                }
+
+                // Find employee by fingerprint_id (which is usually the ID on the device)
+                $employee = Employee::where('fingerprint_id', $userId)->first();
+
+                if (!$employee) {
+                    // Optional: Log missing employee once per user ID to avoid spam
+                    if (!isset($processedEmployees["missing_$userId"])) {
+                        Log::warning("Sync: No employee found for device User ID: $userId");
+                        $processedEmployees["missing_$userId"] = true;
+                    }
+                    continue;
+                }
+
+                $attLog = AttendanceLog::firstOrNew([
+                    'employee_id' => $employee->id,
+                    'date' => $date
+                ]);
+
+                $isNew = !$attLog->exists;
+                $updated = false;
+
+                if ($isNew) {
+                    // First log of the day is Check In
+                    $attLog->check_in = $time;
+                    $attLog->status = 'present';
+                    $attLog->source = 'device';
+                    $updated = true;
+                    $count++;
+                } else {
+                    // Existing log logic: Update Check In (if earlier) or Check Out (if later)
+
+                    // If current log time is EARLIER than existing check_in, update check_in
+                    if (!is_null($attLog->check_in) && $time < $attLog->check_in) {
+                        $attLog->check_in = $time;
+                        $updated = true;
+                        $updatedCount++;
+                    }
+                    // If current log time is LATER than existing check_in, consider it for check_out
+                    elseif (!is_null($attLog->check_in) && $time > $attLog->check_in) {
+                        // Update check_out if it's null OR this time is later than existing check_out
+                        if (is_null($attLog->check_out) || $time > $attLog->check_out) {
+                            $attLog->check_out = $time;
+                            $updated = true;
+                            $updatedCount++;
+                        }
+                    }
+                }
+
+                if ($updated) {
+                    // Recalculate Status
+                    // Rule: Late if check_in > 09:15
+                    if ($attLog->check_in && $attLog->check_in > '09:15') {
+                        $attLog->status = 'late';
+                    }
+                    // Rule: Early Leave if check_out < 17:00 (only if check_out exists)
+                    if ($attLog->check_out && $attLog->check_out < '17:00' && $attLog->status !== 'late') {
+                         if ($attLog->status == 'present') {
+                             $attLog->status = 'early_leave';
+                         }
+                    }
+                    // Rule: Reset to present if conditions met (e.g. fixed invalid status)
+                    if ($attLog->check_in <= '09:15' && (!$attLog->check_out || $attLog->check_out >= '17:00')) {
+                        $attLog->status = 'present';
+                    }
+
+                    $attLog->save();
+                }
+            }
+
+            $msg = "Synced successfully. Fetched $totalFetched logs from last 24h. Created $count new records, updated $updatedCount records.";
+            return back()->with('status', $msg);
+        } catch (\Exception $e) {
+            Log::error('Attendance Sync Error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Sync failed: ' . $e->getMessage()]);
+        }
     }
 
     public function create()
@@ -109,7 +246,7 @@ class AttendanceController extends Controller
     {
         $year = (int) $request->input('year', now()->year);
         $month = (int) $request->input('month', now()->month);
-        $filename = "attendance_{$year}_".str_pad($month, 2, '0', STR_PAD_LEFT).'.csv';
+        $filename = "attendance_{$year}_" . str_pad($month, 2, '0', STR_PAD_LEFT) . '.csv';
         $response = new StreamedResponse(function () use ($year, $month) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Employee', 'Department', 'Present', 'Absent', 'Late', 'Early Leave']);
@@ -119,7 +256,7 @@ class AttendanceController extends Controller
             foreach ($emps as $e) {
                 $logs = AttendanceLog::where('employee_id', $e->id)->whereBetween('date', [$start->toDateString(), $end->toDateString()])->get();
                 fputcsv($out, [
-                    $e->first_name.' '.$e->last_name,
+                    $e->first_name . ' ' . $e->last_name,
                     optional($e->department)->name,
                     $logs->where('status', 'present')->count(),
                     $logs->where('status', 'absent')->count(),
@@ -130,7 +267,7 @@ class AttendanceController extends Controller
             fclose($out);
         });
         $response->headers->set('Content-Type', 'text/csv');
-        $response->headers->set('Content-Disposition', 'attachment; filename="'.$filename.'"');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         return $response;
     }

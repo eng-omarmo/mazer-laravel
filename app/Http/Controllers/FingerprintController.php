@@ -41,8 +41,8 @@ class FingerprintController extends Controller
             return redirect()->back()->with('error', 'Device handshake failed');
         }
         try {
-
-            $result = $this->device->captureTemplate(3);
+            // Pass employee ID to the device to identify the user
+            $result = $this->device->captureTemplate($employee->id, 3);
 
             $enc = $this->crypto->encrypt($result['template']);
 
@@ -59,8 +59,8 @@ class FingerprintController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            // Update the employee's fingerprint_id reference
-            $employee->update(['fingerprint_id' => $record->id]);
+            // Update the employee's fingerprint_id reference to match the Device User ID (which is employee->id)
+            $employee->update(['fingerprint_id' => $employee->id]);
 
             ActivityLog::create([
                 'user_id' => Auth::id(),
