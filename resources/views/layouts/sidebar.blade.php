@@ -70,6 +70,11 @@
                     <li class="submenu-item {{ request()->routeIs('hrm.employees.create') ? 'active' : '' }}"><a
                             href="{{ route('hrm.employees.create') }}"><i class="bi bi-person-plus"></i> Add</a></li>
                     @endcan
+
+                    @can('create employees')
+                    <li class="submenu-item {{ request()->routeIs('hrm.employees.fingerprint') ? 'active' : '' }}"><a
+                            href="{{ route('hrm.fingerprint.show') }}"><i class="bi bi-fingerprint"></i> Register Fingerprint</a></li>
+                    @endcan
                 </ul>
             </li>
             @endcan

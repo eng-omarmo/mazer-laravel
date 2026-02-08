@@ -76,6 +76,12 @@ class AttendanceController extends Controller
             $count = 0;
             $updatedCount = 0;
             $processedEmployees = [];
+            $lastTimes = [];
+            $boundary = env('ATTENDANCE_DAY_BOUNDARY', '04:00');
+            $dedup = (int) env('ATTENDANCE_DEDUP_MINUTES', 2);
+            $minSession = (int) env('ATTENDANCE_MIN_SESSION_MINUTES', 30);
+            $lateThreshold = env('ATTENDANCE_LATE_THRESHOLD', '09:15');
+            $earlyThreshold = env('ATTENDANCE_EARLY_THRESHOLD', '17:00');
 
             foreach ($logs as $log) {
                 // Parse time
@@ -92,6 +98,10 @@ class AttendanceController extends Controller
                     continue;
                 }
 
+                if ($time < $boundary) {
+                    $date = date('Y-m-d', strtotime('-1 day', $ts));
+                }
+
                 // Find employee by fingerprint_id (which is usually the ID on the device)
                 $employee = Employee::where('fingerprint_id', $userId)->first();
 
@@ -104,6 +114,17 @@ class AttendanceController extends Controller
                     continue;
                 }
 
+                $prev = $lastTimes[$employee->id][$date] ?? null;
+                if ($prev) {
+                    $prevTs = strtotime($date . ' ' . $prev);
+                    $curTs = strtotime($date . ' ' . $time);
+                    $diffMin = ($curTs - $prevTs) / 60;
+                    if ($diffMin < $dedup) {
+                        continue;
+                    }
+                }
+                $lastTimes[$employee->id][$date] = $time;
+
                 $attLog = AttendanceLog::firstOrNew([
                     'employee_id' => $employee->id,
                     'date' => $date
@@ -111,30 +132,81 @@ class AttendanceController extends Controller
 
                 $isNew = !$attLog->exists;
                 $updated = false;
+                $deviceStatus = isset($log['status']) ? (int)$log['status'] : 255; // 0: Check-In, 1: Check-Out, 255: Default
+
+                // Logic:
+                // 1. If explicit Status 0 (Check-In) -> Update Check-In
+                // 2. If explicit Status 1 (Check-Out) -> Update Check-Out
+                // 3. Fallback (Status 255 or others): First log = In, Last log = Out
 
                 if ($isNew) {
-                    // First log of the day is Check In
-                    $attLog->check_in = $time;
+                    // New Record
+                    if ($deviceStatus === 1) {
+                        // Weird case: First log is Check-Out? Treat as Check-Out (Check-In might be missing)
+                        $attLog->check_out = $time;
+                    } else {
+                        // Default to Check-In
+                        $attLog->check_in = $time;
+                    }
                     $attLog->status = 'present';
                     $attLog->source = 'device';
                     $updated = true;
                     $count++;
                 } else {
-                    // Existing log logic: Update Check In (if earlier) or Check Out (if later)
+                    // Existing Record
+                    if ($deviceStatus === 0) {
+                         // Explicit Check-In
+                         // Only update if earlier than existing check-in (or if check-in is missing)
+                         if (is_null($attLog->check_in) || $time < $attLog->check_in) {
+                             $attLog->check_in = $time;
+                             $updated = true;
+                             $updatedCount++;
+                         }
+                    } elseif ($deviceStatus === 1) {
+                         // Explicit Check-Out
+                         // Always update Check-Out if this is a check-out log (and it's later than check-in)
+                         // Or if check-out is missing
+                         if (is_null($attLog->check_out) || $time > $attLog->check_out) {
+                             // Ensure it's not before check-in (unless check-in is missing)
+                             if (is_null($attLog->check_in) || $time > $attLog->check_in) {
+                                 if (!is_null($attLog->check_in)) {
+                                     $baseTs = strtotime($date . ' ' . $attLog->check_in);
+                                     $curTs = strtotime($date . ' ' . $time);
+                                     $mins = ($curTs - $baseTs) / 60;
+                                     if ($mins >= $minSession) {
+                                         $attLog->check_out = $time;
+                                         $updated = true;
+                                         $updatedCount++;
+                                     }
+                                 } else {
+                                     $attLog->check_out = $time;
+                                     $updated = true;
+                                     $updatedCount++;
+                                 }
+                             }
+                         }
+                    } else {
+                        // Fallback: Time-based logic for Status 255/Other
 
-                    // If current log time is EARLIER than existing check_in, update check_in
-                    if (!is_null($attLog->check_in) && $time < $attLog->check_in) {
-                        $attLog->check_in = $time;
-                        $updated = true;
-                        $updatedCount++;
-                    }
-                    // If current log time is LATER than existing check_in, consider it for check_out
-                    elseif (!is_null($attLog->check_in) && $time > $attLog->check_in) {
-                        // Update check_out if it's null OR this time is later than existing check_out
-                        if (is_null($attLog->check_out) || $time > $attLog->check_out) {
-                            $attLog->check_out = $time;
+                        // If current log time is EARLIER than existing check_in, update check_in
+                        if (!is_null($attLog->check_in) && $time < $attLog->check_in) {
+                            $attLog->check_in = $time;
                             $updated = true;
                             $updatedCount++;
+                        }
+                        // If current log time is LATER than existing check_in, consider it for check_out
+                        elseif (!is_null($attLog->check_in) && $time > $attLog->check_in) {
+                            // Update check_out if it's null OR this time is later than existing check_out
+                            if (is_null($attLog->check_out) || $time > $attLog->check_out) {
+                                $baseTs = strtotime($date . ' ' . $attLog->check_in);
+                                $curTs = strtotime($date . ' ' . $time);
+                                $mins = ($curTs - $baseTs) / 60;
+                                if ($mins >= $minSession) {
+                                    $attLog->check_out = $time;
+                                    $updated = true;
+                                    $updatedCount++;
+                                }
+                            }
                         }
                     }
                 }
@@ -142,17 +214,17 @@ class AttendanceController extends Controller
                 if ($updated) {
                     // Recalculate Status
                     // Rule: Late if check_in > 09:15
-                    if ($attLog->check_in && $attLog->check_in > '09:15') {
+                    if ($attLog->check_in && $attLog->check_in > $lateThreshold) {
                         $attLog->status = 'late';
                     }
                     // Rule: Early Leave if check_out < 17:00 (only if check_out exists)
-                    if ($attLog->check_out && $attLog->check_out < '17:00' && $attLog->status !== 'late') {
+                    if ($attLog->check_out && $attLog->check_out < $earlyThreshold && $attLog->status !== 'late') {
                          if ($attLog->status == 'present') {
                              $attLog->status = 'early_leave';
                          }
                     }
                     // Rule: Reset to present if conditions met (e.g. fixed invalid status)
-                    if ($attLog->check_in <= '09:15' && (!$attLog->check_out || $attLog->check_out >= '17:00')) {
+                    if ($attLog->check_in <= $lateThreshold && (!$attLog->check_out || $attLog->check_out >= $earlyThreshold)) {
                         $attLog->status = 'present';
                     }
 
