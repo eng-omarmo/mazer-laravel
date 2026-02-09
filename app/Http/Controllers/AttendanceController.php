@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceLog;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Events\AttendanceUpdated;
+use App\Services\TimeNormalizer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -38,8 +41,7 @@ class AttendanceController extends Controller
             $client = new \GuzzleHttp\Client();
             $agentUrl = env('ZK_AGENT_URL', 'http://127.0.0.1:8282');
 
-            // Calculate 24-hour window
-            $since = now()->subHours(24);
+            $since = now()->startOfDay();
             $sinceStr = $since->toDateTimeString();
 
             Log::info("Starting attendance sync from $agentUrl (Since: $sinceStr)");
@@ -77,30 +79,31 @@ class AttendanceController extends Controller
             $updatedCount = 0;
             $processedEmployees = [];
             $lastTimes = [];
-            $boundary = env('ATTENDANCE_DAY_BOUNDARY', '04:00');
-            $dedup = (int) env('ATTENDANCE_DEDUP_MINUTES', 2);
-            $minSession = (int) env('ATTENDANCE_MIN_SESSION_MINUTES', 30);
+            $boundary = env('ATTENDANCE_DAY_BOUNDARY', '00:00');
+            $dedup = max(5, (int) env('ATTENDANCE_DEDUP_MINUTES', 5));
+            $minSession = max(30, (int) env('ATTENDANCE_MIN_SESSION_MINUTES', 30));
             $lateThreshold = env('ATTENDANCE_LATE_THRESHOLD', '09:15');
             $earlyThreshold = env('ATTENDANCE_EARLY_THRESHOLD', '17:00');
 
+            $normalizer = new TimeNormalizer();
+            $until = (clone $since)->addDay();
             foreach ($logs as $log) {
                 // Parse time
                 $timeStr = $log['time'] ?? $log['attTime'] ?? null;
                 if (!$timeStr) continue;
 
-                $ts = strtotime($timeStr);
-                $date = date('Y-m-d', $ts);
-                $time = date('H:i', $ts);
-                $userId = $log['userId'] ?? $log['uid'] ?? 0;
-
-                // Ensure log is within the last 24 hours (double check)
-                if ($timeStr < $sinceStr) {
+                try {
+                    $norm = $normalizer->normalize($timeStr, config('app.timezone'), $boundary);
+                } catch (\InvalidArgumentException $e) {
+                    Log::warning('Skipping malformed device timestamp', ['raw' => $timeStr, 'error' => $e->getMessage()]);
                     continue;
                 }
-
-                if ($time < $boundary) {
-                    $date = date('Y-m-d', strtotime('-1 day', $ts));
+                if (! $normalizer->withinWindow($norm['local'], $since, $until)) {
+                    continue;
                 }
+                $date = $norm['date'];
+                $time = $norm['time'];
+                $userId = $log['userId'] ?? $log['uid'] ?? 0;
 
                 // Find employee by fingerprint_id (which is usually the ID on the device)
                 $employee = Employee::where('fingerprint_id', $userId)->first();
@@ -125,114 +128,95 @@ class AttendanceController extends Controller
                 }
                 $lastTimes[$employee->id][$date] = $time;
 
-                $attLog = AttendanceLog::firstOrNew([
-                    'employee_id' => $employee->id,
-                    'date' => $date
-                ]);
+                DB::transaction(function () use ($employee, $date, $time, $lateThreshold, $earlyThreshold, $minSession, $dedup) {
+                    $open = AttendanceLog::where('employee_id', $employee->id)
+                        ->whereNotNull('check_in')
+                        ->whereNull('check_out')
+                        ->orderByDesc('date')
+                        ->lockForUpdate()
+                        ->first();
 
-                $isNew = !$attLog->exists;
-                $updated = false;
-                $deviceStatus = isset($log['status']) ? (int)$log['status'] : 255; // 0: Check-In, 1: Check-Out, 255: Default
-
-                // Logic:
-                // 1. If explicit Status 0 (Check-In) -> Update Check-In
-                // 2. If explicit Status 1 (Check-Out) -> Update Check-Out
-                // 3. Fallback (Status 255 or others): First log = In, Last log = Out
-
-                if ($isNew) {
-                    // New Record
-                    if ($deviceStatus === 1) {
-                        // Weird case: First log is Check-Out? Treat as Check-Out (Check-In might be missing)
-                        $attLog->check_out = $time;
+                    $prevPunchTs = null;
+                    if ($open) {
+                        $openDateStr = $open->date instanceof \Illuminate\Support\Carbon ? $open->date->toDateString() : (string) $open->date;
+                        $prevStr = $open->check_out
+                            ? (is_string($open->check_out) ? $open->check_out : $open->check_out->format('H:i'))
+                            : (is_string($open->check_in) ? $open->check_in : $open->check_in->format('H:i'));
+                        $prevPunchTs = strtotime($openDateStr . ' ' . $prevStr);
                     } else {
-                        // Default to Check-In
-                        $attLog->check_in = $time;
-                    }
-                    $attLog->status = 'present';
-                    $attLog->source = 'device';
-                    $updated = true;
-                    $count++;
-                } else {
-                    // Existing Record
-                    if ($deviceStatus === 0) {
-                         // Explicit Check-In
-                         // Only update if earlier than existing check-in (or if check-in is missing)
-                         if (is_null($attLog->check_in) || $time < $attLog->check_in) {
-                             $attLog->check_in = $time;
-                             $updated = true;
-                             $updatedCount++;
-                         }
-                    } elseif ($deviceStatus === 1) {
-                         // Explicit Check-Out
-                         // Always update Check-Out if this is a check-out log (and it's later than check-in)
-                         // Or if check-out is missing
-                         if (is_null($attLog->check_out) || $time > $attLog->check_out) {
-                             // Ensure it's not before check-in (unless check-in is missing)
-                             if (is_null($attLog->check_in) || $time > $attLog->check_in) {
-                                 if (!is_null($attLog->check_in)) {
-                                     $baseTs = strtotime($date . ' ' . $attLog->check_in);
-                                     $curTs = strtotime($date . ' ' . $time);
-                                     $mins = ($curTs - $baseTs) / 60;
-                                     if ($mins >= $minSession) {
-                                         $attLog->check_out = $time;
-                                         $updated = true;
-                                         $updatedCount++;
-                                     }
-                                 } else {
-                                     $attLog->check_out = $time;
-                                     $updated = true;
-                                     $updatedCount++;
-                                 }
-                             }
-                         }
-                    } else {
-                        // Fallback: Time-based logic for Status 255/Other
-
-                        // If current log time is EARLIER than existing check_in, update check_in
-                        if (!is_null($attLog->check_in) && $time < $attLog->check_in) {
-                            $attLog->check_in = $time;
-                            $updated = true;
-                            $updatedCount++;
+                        $lastSameDay = AttendanceLog::where('employee_id', $employee->id)
+                            ->whereDate('date', $date)
+                            ->orderByDesc('date')
+                            ->lockForUpdate()
+                            ->first();
+                        if ($lastSameDay) {
+                            $lastDateStr = $lastSameDay->date instanceof \Illuminate\Support\Carbon ? $lastSameDay->date->toDateString() : (string) $lastSameDay->date;
+                            $prevStr = $lastSameDay->check_out
+                                ? (is_string($lastSameDay->check_out) ? $lastSameDay->check_out : $lastSameDay->check_out->format('H:i'))
+                                : (is_string($lastSameDay->check_in) ? $lastSameDay->check_in : $lastSameDay->check_in->format('H:i'));
+                            $prevPunchTs = strtotime($lastDateStr . ' ' . $prevStr);
                         }
-                        // If current log time is LATER than existing check_in, consider it for check_out
-                        elseif (!is_null($attLog->check_in) && $time > $attLog->check_in) {
-                            // Update check_out if it's null OR this time is later than existing check_out
-                            if (is_null($attLog->check_out) || $time > $attLog->check_out) {
-                                $baseTs = strtotime($date . ' ' . $attLog->check_in);
-                                $curTs = strtotime($date . ' ' . $time);
-                                $mins = ($curTs - $baseTs) / 60;
-                                if ($mins >= $minSession) {
-                                    $attLog->check_out = $time;
-                                    $updated = true;
-                                    $updatedCount++;
+                    }
+                    $curTs = strtotime($date . ' ' . $time);
+                    if ($prevPunchTs) {
+                        $diffMin = ($curTs - $prevPunchTs) / 60;
+                        if ($diffMin >= 0 && $diffMin < $dedup) {
+                            return;
+                        }
+                    }
+
+                    if ($open) {
+                        $openDateStr = $open->date instanceof \Illuminate\Support\Carbon ? $open->date->toDateString() : (string) $open->date;
+                        $ciStr = is_string($open->check_in) ? $open->check_in : $open->check_in->format('H:i');
+                        $baseTs = strtotime($openDateStr . ' ' . $ciStr);
+                        $mins = ($curTs - $baseTs) / 60;
+                        if ($mins >= $minSession && $curTs > $baseTs) {
+                            $open->check_out = $time;
+                            if (!$open->status || $open->status === 'present') {
+                                if ($open->check_in && $open->check_in > $lateThreshold) {
+                                    $open->status = 'late';
+                                }
+                                if ($open->check_out && $open->check_out < $earlyThreshold && $open->status !== 'late') {
+                                    $open->status = 'early_leave';
                                 }
                             }
+                            $open->source = 'device';
+                            $open->save();
+                            event(new AttendanceUpdated($open, null));
+                            return;
                         }
                     }
-                }
 
-                if ($updated) {
-                    // Recalculate Status
-                    // Rule: Late if check_in > 09:15
-                    if ($attLog->check_in && $attLog->check_in > $lateThreshold) {
-                        $attLog->status = 'late';
+                    $attLog = AttendanceLog::where('employee_id', $employee->id)->whereDate('date', $date)->lockForUpdate()->first();
+                    if (! $attLog) {
+                        $attLog = new AttendanceLog(['employee_id' => $employee->id, 'date' => $date]);
                     }
-                    // Rule: Early Leave if check_out < 17:00 (only if check_out exists)
-                    if ($attLog->check_out && $attLog->check_out < $earlyThreshold && $attLog->status !== 'late') {
-                         if ($attLog->status == 'present') {
-                             $attLog->status = 'early_leave';
-                         }
+                    $curCi = $attLog->check_in ? (is_string($attLog->check_in) ? $attLog->check_in : $attLog->check_in->format('H:i')) : null;
+                    if (is_null($curCi) || $time < $curCi) {
+                        $attLog->check_in = $time;
+                        $attLog->status = $time > $lateThreshold ? 'late' : 'present';
+                        $attLog->source = 'device';
+                        $attLog->save();
+                        event(new AttendanceUpdated($attLog, null));
+                    } else {
+                        $ciStr = is_string($attLog->check_in) ? $attLog->check_in : $attLog->check_in->format('H:i');
+                        $baseTs = strtotime($date . ' ' . $ciStr);
+                        $mins = ($curTs - $baseTs) / 60;
+                        $coStr = $attLog->check_out ? (is_string($attLog->check_out) ? $attLog->check_out : $attLog->check_out->format('H:i')) : null;
+                        if (($mins >= $minSession) && ($curTs > $baseTs) && (is_null($coStr) || $time > $coStr)) {
+                            $attLog->check_out = $time;
+                            if ($attLog->check_out && $attLog->check_out < $earlyThreshold && $attLog->status !== 'late') {
+                                $attLog->status = 'early_leave';
+                            }
+                            $attLog->source = 'device';
+                            $attLog->save();
+                            event(new AttendanceUpdated($attLog, null));
+                        }
                     }
-                    // Rule: Reset to present if conditions met (e.g. fixed invalid status)
-                    if ($attLog->check_in <= $lateThreshold && (!$attLog->check_out || $attLog->check_out >= $earlyThreshold)) {
-                        $attLog->status = 'present';
-                    }
-
-                    $attLog->save();
-                }
+                });
             }
 
-            $msg = "Synced successfully. Fetched $totalFetched logs from last 24h. Created $count new records, updated $updatedCount records.";
+            $msg = "Synced successfully for today. Fetched $totalFetched logs. Created $count new records, updated $updatedCount records.";
             return back()->with('status', $msg);
         } catch (\Exception $e) {
             Log::error('Attendance Sync Error: ' . $e->getMessage());

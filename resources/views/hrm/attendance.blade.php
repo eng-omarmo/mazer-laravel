@@ -33,7 +33,7 @@
 
                     <form action="{{ route('hrm.attendance.sync') }}" method="POST" style="display:inline;" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='<span class=\'spinner-border spinner-border-sm\' role=\'status\' aria-hidden=\'true\'></span> Syncing...';">
                         @csrf
-                        <button type="submit" class="btn btn-success"><i class="bi bi-arrow-repeat"></i> Sync (Last 24h)</button>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-arrow-repeat"></i> Sync (Today)</button>
                     </form>
 
                     <form class="row g-2" method="get" action="{{ route('hrm.attendance.index') }}">
@@ -74,7 +74,9 @@
                                 <th>Date</th>
                                 <th>Check-in</th>
                                 <th>Check-out</th>
+                                <th>Shift</th>
                                 <th>Status</th>
+                                <th>Overtime</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -83,12 +85,16 @@
                                 <tr>
                                     <td>{{ $log->employee->first_name }} {{ $log->employee->last_name }}</td>
                                     <td>{{ optional($log->employee->department)->name }}</td>
-                                    <td>{{ $log->date }}</td>
-                                    <td>{{ $log->check_in ?? '-' }}</td>
-                                    <td>{{ $log->check_out ?? '-' }}</td>
+                                    <td>{{ $log->date instanceof \Illuminate\Support\Carbon ? $log->date->toDateString() : (string) $log->date }}</td>
+                                    <td>{{ $log->check_in ? (is_string($log->check_in) ? \Carbon\Carbon::parse($log->check_in)->format('H:i') : $log->check_in->format('H:i')) : '-' }}</td>
+                                    <td>{{ $log->check_out ? (is_string($log->check_out) ? \Carbon\Carbon::parse($log->check_out)->format('H:i') : $log->check_out->format('H:i')) : '-' }}</td>
+                                    <td>
+                                        {{ $log->shift_type ? ucfirst($log->shift_type) : '-' }}
+                                    </td>
                                     <td>
                                         <span class="badge bg-{{ $log->status === 'present' ? 'success' : ($log->status === 'absent' ? 'secondary' : ($log->status === 'late' ? 'warning' : 'info')) }}">{{ ucfirst(str_replace('_',' ', $log->status)) }}</span>
                                     </td>
+                                    <td>{{ $log->overtime_minutes ? $log->overtime_minutes.' min' : '-' }}</td>
                                     <td>
                                         <a href="{{ route('hrm.attendance.edit', $log) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil-square"></i> Edit</a>
                                     </td>
