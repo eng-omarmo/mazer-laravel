@@ -34,6 +34,7 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
+                                <th scope="col">ID</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Department</th>
@@ -54,6 +55,7 @@
                                     $ct = $emp->documents->firstWhere('type','contract');
                                 @endphp
                                 <tr>
+                                    <th scope="row">{{ $emp->id }}</th>
                                     <td>{{ $emp->first_name }} {{ $emp->last_name }}</td>
                                     <td>{{ $emp->email }}</td>
                                     <td>{{ optional($emp->department)->code }} {{ optional($emp->department) ? '-' : '' }} {{ optional($emp->department)->name }}</td>
